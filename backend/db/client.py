@@ -15,7 +15,7 @@ def get_leads_needing_brief(batch_size: int = 20) -> list[dict]:
         .eq("opted_out", False)
         .eq("dnc_blocked", False)
         .neq("stage", "dead")
-        .is_("call_brief", "null")
+        .or_("call_brief.is.null,call_brief_generated_at.lt.2026-06-07T21:26:06.932595+00:00")
         .gte("properties.distress_score", 50)
         .limit(batch_size)
         .execute()

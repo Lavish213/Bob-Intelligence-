@@ -10,6 +10,7 @@ from backend.db.client import (
 )
 from backend.call_planner.brief_generator import generate_call_brief
 from backend.decisions.decision_logger import log_decision
+from backend.events.bob_events import emit_call_brief_created, emit_lead_ready_for_call
 
 
 def _get_situation_label(lead: dict, prop: dict) -> str:
@@ -89,6 +90,21 @@ def run_once() -> dict:
             )
 
             results["briefs_created"] += 1
+            try:
+                emit_call_brief_created(
+                    lead_id=lead_id,
+                    phase=brief.phase,
+                    missing_box=brief.missing_box,
+                    mood=brief.mood,
+                    confidence=brief.confidence,
+                )
+                emit_lead_ready_for_call(
+                    lead_id=lead_id,
+                    priority_score=int(prop.get("distress_score") or 50),
+                    situation_label=situation_label,
+                )
+            except Exception as _ee:
+                logger.warning("bob_emit_failed lead_id={} error={}", lead_id, str(_ee))
             logger.info(
                 "brief_saved lead_id={} phase={} box={} mood={}",
                 lead_id, brief.phase, brief.missing_box, brief.mood,
