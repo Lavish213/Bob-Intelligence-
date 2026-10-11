@@ -1,59 +1,57 @@
 from __future__ import annotations
 from functools import lru_cache
-from supabase import create_client, Client
-from backend.config import SUPABASE_URL, SUPABASE_SERVICE_KEY
+from datetime import datetime, timezone, timedelta
+from supabase import create_client, ClientOptions
+from backend.config import settings, validate_settings
+
 
 @lru_cache(maxsize=1)
-def get_client() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+def get_client():
+    config = settings()
+    validate_settings(config)
+    return create_client(config.supabase_url, config.service_key, options=ClientOptions(postgrest_client_timeout=10, auto_refresh_token=False, persist_session=False))
 
-def get_leads_needing_brief(batch_size: int = 20) -> list[dict]:
-    client = get_client()
-    resp = (
-        client.table("leads")
-        .select("*, properties!properties_lead_id_fkey(*)")
-        .eq("opted_out", False)
-        .eq("dnc_blocked", False)
-        .neq("stage", "dead")
-        .or_("call_brief.is.null,call_brief_generated_at.lt.2026-06-07T21:26:06.932595+00:00")
-        .gte("properties.distress_score", 50)
-        .limit(batch_size)
-        .execute()
-    )
-    rows = resp.data or []
-    for r in rows:
-        if isinstance(r.get("properties"), list):
-            r["properties"] = r["properties"][0] if r["properties"] else {}
-    return rows
 
-def save_call_brief(lead_id: str, brief: dict) -> None:
-    from datetime import datetime, timezone
-    client = get_client()
-    client.table("leads").update({
-        "call_brief": brief,
-        "call_brief_generated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", lead_id).execute()
+def get_leads_needing_brief(batch_size=20):
+    config = settings()
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=config.refresh_hours)).isoformat()
+    response = get_client().table('leads').select('*').eq('tenant_id', config.tenant_id).eq('opted_out', False).eq('dnc_blocked', False).neq('stage', 'dead').or_(f'call_brief.is.null,call_brief_generated_at.lt.{cutoff}').order('call_brief_generated_at', nullsfirst=True).limit(batch_size).execute()
+    return response.data or []
 
-def load_intel_packet(lead_id: str) -> dict | None:
-    client = get_client()
-    resp = client.table("lead_intel_packets").select("*").eq("lead_id", lead_id).limit(1).execute()
-    return resp.data[0] if resp.data else None
 
-def save_intel_packet(packet: dict) -> None:
-    client = get_client()
-    client.table("lead_intel_packets").upsert(packet, on_conflict="lead_id").execute()
+def load_intel_packet(lead_id):
+    response = get_client().table('intel_packets').select('*').eq('tenant_id', settings().tenant_id).eq('lead_id', lead_id).limit(1).execute()
+    return response.data[0] if response.data else None
 
-def save_decision_record(record: dict) -> None:
-    client = get_client()
-    client.table("decision_records").insert(record).execute()
 
-def get_seller_memory(lead_id: str) -> dict:
-    client = get_client()
-    resp = (
-        client.table("seller_memory")
-        .select("*")
-        .eq("lead_id", lead_id)
-        .limit(1)
-        .execute()
-    )
-    return resp.data[0] if resp.data else {}
+def get_seller_memory(lead_id):
+    response = get_client().table('leads').select('*').eq('tenant_id', settings().tenant_id).eq('id', lead_id).limit(1).execute()
+    return response.data[0] if response.data else {}
+
+
+def claim_brief_jobs(batch_size=None):
+    config = settings()
+    response = get_client().rpc('bob_claim_brief_jobs', {'p_tenant_id': config.tenant_id, 'p_batch_size': batch_size or config.batch_size, 'p_lease_seconds': config.lease_seconds, 'p_refresh_hours': config.refresh_hours}).execute()
+    return response.data or []
+
+
+def complete_brief_job(job, brief, decision):
+    response = get_client().rpc('bob_complete_brief_job', {'p_tenant_id': settings().tenant_id, 'p_lead_id': job['lead_id'], 'p_token': job['lease_token'], 'p_brief': brief, 'p_decision': decision}).execute()
+    if response.data is not True:
+        raise RuntimeError('Brief commit rejected: stale source, expired lease or lost ownership')
+
+
+def fail_brief_job(job, reason):
+    response = get_client().rpc('bob_fail_brief_job', {'p_tenant_id': settings().tenant_id, 'p_lead_id': job['lead_id'], 'p_token': job['lease_token'], 'p_reason': reason[:200]}).execute()
+    return response.data is True
+
+
+def claim_events(batch_size=None):
+    config = settings()
+    response = get_client().rpc('bob_claim_events', {'p_tenant_id': config.tenant_id, 'p_batch_size': batch_size or config.batch_size}).execute()
+    return response.data or []
+
+
+def finish_event(event_id, token, accepted):
+    response = get_client().rpc('bob_finish_event', {'p_tenant_id': settings().tenant_id, 'p_event_id': event_id, 'p_token': token, 'p_accepted': accepted}).execute()
+    return response.data is True

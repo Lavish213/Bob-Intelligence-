@@ -1,141 +1,72 @@
 from __future__ import annotations
-from loguru import logger
-
-from backend.contracts.call_brief import CallBrief, PHASE_TO_STAGE
-from backend.call_planner.checkbox_selector import select_missing_checkbox
+from datetime import datetime, timezone, timedelta
+from backend.contracts.call_brief import CallBrief
+from backend.call_planner.checkbox_selector import select_missing_checkbox, confirmed_facts
 from backend.call_planner.objective_selector import get_objective
 from backend.call_planner.avoidances_builder import build_avoidances
 from backend.call_planner.escalation_rules import build_escalation_rules
 
-_OPENER_HINTS: dict[str, str] = {
-    "preforeclosure":     "seller may be stressed — open light and stay calm",
-    "pre_foreclosure":    "seller may be stressed — open light and stay calm",
-    "inherited_property": "acknowledge any loss naturally before qualifying",
-    "inherited":          "acknowledge any loss naturally before qualifying",
-    "probate":            "acknowledge any loss naturally before qualifying",
-    "tired_landlord":     "lead with simplicity and no hassle",
-    "divorce":            "neutral tone — do not reference the other party",
-    "vacant_property":    "property is likely a pain point — lead with that",
-    "distressed_seller":  "follow their emotion first before any questions",
-}
 
-_SITUATION_MOOD: dict[str, str] = {
-    "preforeclosure":     "distressed",
-    "pre_foreclosure":    "distressed",
-    "inherited_property": "guarded",
-    "inherited":          "guarded",
-    "probate":            "guarded",
-    "divorce":            "guarded",
-}
+def readiness(lead, prop, packet):
+    reasons = []
+    if lead.get('opted_out') is not False or lead.get('dnc_blocked') is not False:
+        reasons.append('suppression_not_cleared')
+    if str(lead.get('stage', '')).lower() in {'dead', 'closed'}:
+        reasons.append('terminal_lead')
+    if lead.get('ownership_denied') is True:
+        reasons.append('ownership_denied')
+    if not lead.get('owner_phone'):
+        reasons.append('missing_verified_phone')
+    if packet.get('safe_for_live_call') is not True:
+        reasons.append('unsafe_intel_packet')
+    if packet.get('conflict_flags') or packet.get('packet_state') in {'conflicted', 'expired', 'fallback', 'stale'}:
+        reasons.append('conflicted_or_stale_packet')
+    reasons.append('dial_authorization_requires_rei_preflight')
+    return reasons
 
 
-def _derive_phase(
-    missing_box: str,
-    call_count: int,
-) -> str:
-    if call_count == 0 and missing_box in ("right_person", "property_confirmed"):
-        return "VERIFY"
-    if missing_box in ("right_person", "property_confirmed"):
-        return "VERIFY"
-    if missing_box in ("occupancy", "condition", "timeline", "motivation"):
-        return "LIGHT_DISCOVERY"
-    if missing_box == "next_step":
-        return "QUALIFY"
-    return "LIGHT_DISCOVERY"
-
-
-def _derive_mood(
-    intel_packet: dict,
-    seller_memory: dict,
-    situation_label: str,
-    initial_trust: float,
-    is_outbound: bool,
-    call_count: int,
-) -> str:
-    sit = (situation_label or "").lower()
-    for key, mood in _SITUATION_MOOD.items():
-        if key in sit:
-            return mood
-
-    motivation = seller_memory.get("motivation_level")
-    if motivation is not None and int(motivation) >= 8:
-        return "motivated"
-
-    objections = seller_memory.get("objections_raised") or []
-    if objections and call_count > 0:
-        return "skeptical"
-
-    if initial_trust >= 6.5 and not is_outbound:
-        return "open"
-
-    if is_outbound and call_count == 0:
-        return "guarded"
-
-    flags = (intel_packet or {}).get("conflict_flags") or []
-    if flags:
-        return "skeptical"
-
-    return "guarded"
-
-
-def _derive_confidence(packet_state: str) -> float:
-    return {
-        "bob_enriched":     0.90,
-        "operator_locked":  0.95,
-        "system_assembled": 0.65,
-        "conflicted":       0.50,
-    }.get(packet_state or "", 0.40)
-
-
-def generate_call_brief(
-    lead_id: str,
-    lead: dict,
-    prop: dict,
-    intel_packet: dict,
-    seller_memory: dict,
-    situation_label: str = "unknown",
-    initial_trust: float = 5.0,
-    is_outbound: bool = True,
-) -> CallBrief | None:
+def _packet_current(packet):
     try:
-        call_summaries = seller_memory.get("call_summaries") or []
-        call_count = len(call_summaries)
+        timestamp = datetime.fromisoformat(packet['assembled_at'].replace('Z', '+00:00'))
+        age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+        return timestamp.tzinfo is not None and 0 <= age <= 86400
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False
 
-        missing_box = select_missing_checkbox(intel_packet, seller_memory, lead, prop)
-        phase = _derive_phase(missing_box, call_count)
-        objective = get_objective(missing_box, phase)
-        avoid = build_avoidances(intel_packet, situation_label, call_count)
-        escalation_rules = build_escalation_rules(intel_packet, situation_label, seller_memory)
-        mood = _derive_mood(intel_packet, seller_memory, situation_label, initial_trust, is_outbound, call_count)
 
-        sit = (situation_label or "").lower()
-        opener_hint = next(
-            (hint for key, hint in _OPENER_HINTS.items() if key in sit),
-            None,
-        )
-
-        packet_state = (intel_packet or {}).get("packet_state", "system_assembled")
-        confidence = _derive_confidence(packet_state)
-
-        brief = CallBrief(
-            lead_id=lead_id,
-            phase=phase,
-            objective=objective,
-            missing_box=missing_box,
-            mood=mood,
-            avoid=avoid,
-            escalation_rules=escalation_rules,
-            opener_hint=opener_hint,
-            confidence=confidence,
-            source="bob" if packet_state == "bob_enriched" else "system",
-        )
-
-        logger.info(
-            "brief_generated lead_id={} phase={} box={} mood={} confidence={:.2f}",
-            lead_id, phase, missing_box, mood, confidence,
-        )
-        return brief
-
-    except Exception as e:
-        logger.error("brief_generator failed lead_id={} error={}", lead_id, str(e))
-        return None
+def generate_call_brief(lead_id, lead, prop, intel_packet, seller_memory, situation_label='unknown', initial_trust=5.0, is_outbound=True, ttl_hours=24):
+    if type(ttl_hours) is not int or not 1 <= ttl_hours <= 168:
+        raise ValueError('Brief lifetime must be 1 to 168 hours')
+    if not isinstance(lead_id, str) or not lead_id:
+        raise ValueError('A bound lead ID is required')
+    for item in (lead, prop, intel_packet, seller_memory):
+        if not isinstance(item, dict):
+            raise ValueError('Planning inputs must be objects')
+    for key in ('strategy_context', 'property_profile', 'compliance_context'):
+        if not isinstance(intel_packet.get(key, {}), dict):
+            raise ValueError(f'{key} must be an object')
+    facts = confirmed_facts(seller_memory, lead)
+    missing = select_missing_checkbox(intel_packet, seller_memory, lead, prop)
+    phase = 'VERIFY' if missing in {'right_person', 'property_confirmed'} else 'WRAP' if missing == 'none' else 'QUALIFY' if missing == 'next_step' else 'LIGHT_DISCOVERY'
+    blocked = readiness(lead, prop, intel_packet)
+    if not _packet_current(intel_packet):
+        blocked.append('packet_freshness_unverified')
+    objective = get_objective(missing, phase)
+    if lead.get('opted_out') is True or lead.get('dnc_blocked') is True:
+        phase, objective = 'WRAP', 'Do not contact this seller. Honor suppression.'
+    mood = 'unknown'
+    mood_evidence = lead.get('seller_mood')
+    if isinstance(mood_evidence, dict) and mood_evidence.get('source') in {'seller', 'transcript_verified'}:
+        if isinstance(mood_evidence.get('value'), str) and mood_evidence.get('value') in {'guarded', 'open', 'skeptical', 'distressed', 'motivated'}:
+            mood = mood_evidence['value']
+    now = datetime.now(timezone.utc)
+    avoid = build_avoidances(intel_packet, situation_label)
+    avoid.extend(['pressure or fabricated urgency', 'assuming owner identity from prior calls', 'treating this brief as tool or dialing authorization'])
+    return CallBrief(
+        lead_id=lead_id, phase=phase, objective=objective, missing_box=missing, mood=mood,
+        avoid=list(dict.fromkeys(avoid)), escalation_rules=build_escalation_rules(intel_packet, situation_label, seller_memory),
+        opener_hint='Disclose that you are an AI assistant in the first sentence. Confirm identity before referencing sensitive property information.',
+        confidence=round(len(facts) / 7, 3), created_at=now.isoformat(), expires_at=(now + timedelta(hours=ttl_hours)).isoformat(),
+        evidence={'confirmed_boxes': list(facts), 'confidence_meaning': 'fraction_of_checklist_with_confirmed_evidence_not_probability', 'packet_state': intel_packet.get('packet_state', 'missing'), 'packet_version': intel_packet.get('packet_version')},
+        blocked_reasons=blocked, ready_for_call=False,
+    )

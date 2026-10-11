@@ -1,0 +1,344 @@
+[
+  {
+    "id": "BOB-001",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Wrong intelligence table",
+    "file": "backend/db/client.py",
+    "problem": "Bob read lead_intel_packets while REI writes intel_packets.",
+    "repair": "Canonical intel_packets reads and tenant-bound snapshots."
+  },
+  {
+    "id": "BOB-002",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Wrong seller-memory table",
+    "file": "backend/db/client.py",
+    "problem": "Bob read seller_memory while Sophia saves memory on leads.",
+    "repair": "Canonical leads memory and fresh verified checklist evidence."
+  },
+  {
+    "id": "BOB-003",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Fixed stale cutoff",
+    "file": "backend/db/client.py",
+    "problem": "The supposed 24-hour refresh used a fixed June 7, 2026 timestamp.",
+    "repair": "Rolling dates and database job deadlines/source invalidation."
+  },
+  {
+    "id": "BOB-004",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Fragile reverse foreign-key relationship",
+    "file": "backend/db/client.py",
+    "problem": "Lead selection assumed properties_lead_id_fkey while REI creates leads using property_id.",
+    "repair": "Canonical property_id join in tenant-bound snapshots."
+  },
+  {
+    "id": "BOB-005",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Events scheduled on an idle loop",
+    "file": "backend/events/bob_events.py",
+    "problem": "The synchronous worker scheduled coroutines but never ran the event loop; exceptions were swallowed.",
+    "repair": "Synchronous bounded transport draining a durable outbox."
+  },
+  {
+    "id": "BOB-006",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "HTTP rejection counted as delivery",
+    "file": "backend/events/bob_events.py",
+    "problem": "The sender never checked HTTP status.",
+    "repair": "Only 2xx acceptance plus owned DB acknowledgment counts."
+  },
+  {
+    "id": "BOB-007",
+    "severity": "P1",
+    "status": "Partial",
+    "title": "Event path and authentication mismatch",
+    "file": "backend/events/bob_events.py",
+    "problem": "Bob omitted the /api/ingest prefix and the secret convention used by REI. Receiver implementation was not provided.",
+    "repair": "Sender aligned to REI convention; receiver authorization, schema, idempotency and route remain unverified."
+  },
+  {
+    "id": "BOB-008",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "No durable event retry",
+    "file": "backend/events/bob_events.py",
+    "problem": "Events disappeared on process death, disabled URL or transient errors.",
+    "repair": "Transactional outbox, owned leases, bounded retries and dead-letter state."
+  },
+  {
+    "id": "BOB-009",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "False ready-to-call events",
+    "file": "backend/worker/loop.py",
+    "problem": "Any generated brief emitted lead-ready regardless of contact/consent/packet authority.",
+    "repair": "Removed automatic lead-ready output. Brief explicitly cannot authorize dialing."
+  },
+  {
+    "id": "BOB-010",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Previous calls invented ownership",
+    "file": "backend/call_planner/checkbox_selector.py",
+    "problem": "Any call summary, including wrong-number or voicemail, counted as confirmed owner.",
+    "repair": "Require fresh explicit confirmed evidence; denial overrides previous confirmations."
+  },
+  {
+    "id": "BOB-011",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Generic hot topics invented property condition",
+    "file": "backend/call_planner/checkbox_selector.py",
+    "problem": "Any hot_topics value skipped condition discovery.",
+    "repair": "Require condition-specific verified checklist evidence."
+  },
+  {
+    "id": "BOB-012",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Database address invented caller confirmation",
+    "file": "backend/call_planner/checkbox_selector.py",
+    "problem": "A stored address skipped property confirmation.",
+    "repair": "Only matching spoken address evidence or verified checklist confirmation qualifies."
+  },
+  {
+    "id": "BOB-013",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Malformed inputs crashed planning",
+    "file": "backend/call_planner/brief_generator.py",
+    "problem": "Invalid motivation, distress, profiles and list fields could fail a lead or contaminate output.",
+    "repair": "Validate object/list types; tolerate unavailable packet dates; malformed jobs retry then quarantine."
+  },
+  {
+    "id": "BOB-014",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Confidence implied unsupported accuracy",
+    "file": "backend/call_planner/brief_generator.py",
+    "problem": "Packet-state labels generated 0.9/0.95 confidence with no calibrated evaluation.",
+    "repair": "Confidence is explicitly checklist completeness, not correctness probability."
+  },
+  {
+    "id": "BOB-015",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Distress record invented current emotion",
+    "file": "backend/call_planner/brief_generator.py",
+    "problem": "Probate or foreclosure labels directly assigned seller mood.",
+    "repair": "Unknown unless seller-sourced evidence supplies a supported mood; Sophia rechecks current emotion."
+  },
+  {
+    "id": "BOB-016",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Approval threshold inflated 100 times",
+    "file": "backend/call_planner/escalation_rules.py",
+    "problem": "25,000,000 cents rendered as $25,000,000 instead of $250,000.",
+    "repair": "Integer cents validated and Decimal dollars formatted correctly."
+  },
+  {
+    "id": "BOB-017",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Completed checklist could never wrap",
+    "file": "backend/call_planner/brief_generator.py",
+    "problem": "Selector always returned next_step; generator could not reach completed WRAP.",
+    "repair": "Explicit none state and exhaustive 128-subset priority tests."
+  },
+  {
+    "id": "BOB-018",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Malformed brief could crash Sophia",
+    "file": "REI-AGENT/backend/voice/call_brief_loader.py",
+    "problem": "Non-string enum fields, wrong lists and invalid dates were not validated.",
+    "repair": "Bounded typed validation; invalid metadata clears old guidance and is ignored."
+  },
+  {
+    "id": "BOB-019",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "No tenant boundary in Bob",
+    "file": "backend/db/client.py",
+    "problem": "Service-role reads/writes filtered only lead IDs, bypassing tenant RLS.",
+    "repair": "All RPCs, sources, reads and event state are tenant-bound; public/anon/authenticated RPC access revoked."
+  },
+  {
+    "id": "BOB-020",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "STOP described as operator escalation",
+    "file": "backend/call_planner/escalation_rules.py",
+    "problem": "STOP was an escalation item with no explicit immediate suppression priority.",
+    "repair": "STOP is immediate suppression/end; never wait for approval."
+  },
+  {
+    "id": "BOB-021",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Duplicate workers could process the same lead",
+    "file": "backend/worker/loop.py",
+    "problem": "No claiming, generation ownership or crash recovery.",
+    "repair": "Skip-locked atomic claims and generation tokens; expired lease reclaimed."
+  },
+  {
+    "id": "BOB-022",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Partial saves created false completion",
+    "file": "backend/worker/loop.py",
+    "problem": "Brief save, decision log and events were independent; logging failures swallowed.",
+    "repair": "Single transaction for brief, decision and outbox; failure rolls all back."
+  },
+  {
+    "id": "BOB-023",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Stale planner could overwrite newer source",
+    "file": "backend/worker/loop.py",
+    "problem": "A lead, memory or packet change between read and write was not detected.",
+    "repair": "Fingerprint current tenant-bound snapshot; lock relevant source rows before commit."
+  },
+  {
+    "id": "BOB-024",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Unbounded network delay and restart behavior",
+    "file": "backend/db/client.py",
+    "problem": "Client defaults and whole-batch claiming could consume a lease before a job began.",
+    "repair": "Ten-second DB timeout, three-second HTTP timeout, one-at-a-time claims and bounded generation leases."
+  },
+  {
+    "id": "BOB-025",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Missing row could be reported saved",
+    "file": "backend/db/client.py",
+    "problem": "Updates did not verify a changed row or owned commit.",
+    "repair": "Boolean transactional RPC acknowledgment required; no confirmed commit means error."
+  },
+  {
+    "id": "BOB-026",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "No brief version, binding or expiry",
+    "file": "backend/contracts/call_brief.py",
+    "problem": "Sophia accepted cached arbitrary brief data without lead identity or freshness checks.",
+    "repair": "V2 schema, bound lead, UTC timestamps, bounded lifetime and no authority flag."
+  },
+  {
+    "id": "BOB-027",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Useful briefing fields loaded but unused",
+    "file": "REI-AGENT/backend/voice/processors/context_tracker.py",
+    "problem": "Mood, opener, escalation rules and objective were stored but largely absent from model guidance.",
+    "repair": "Valid advisory fields included; current call policy and tool permissions retain priority."
+  },
+  {
+    "id": "BOB-028",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Static focus could repeat answered questions",
+    "file": "REI-AGENT/backend/voice/processors/context_tracker.py",
+    "problem": "Bob focus was injected for the entire conversation without acknowledging live progress.",
+    "repair": "Pre-call focus/objective/opening hints stop after the early turns; guardrails remain."
+  },
+  {
+    "id": "BOB-029",
+    "severity": "P1",
+    "status": "Partial",
+    "title": "Feedback had no verified producer/consumer bridge",
+    "file": "REI-AGENT/backend/voice/agent.py",
+    "problem": "Bob read different memory and prior calls/topics were substituted for proof.",
+    "repair": "Live unambiguous frames create timestamped facts; tenant/call-bound RPC merges newer evidence. REI process death before post-call RPC can still lose that handoff."
+  },
+  {
+    "id": "BOB-030",
+    "severity": "P2",
+    "status": "Partial",
+    "title": "Two incompatible Bob planner implementations",
+    "file": "REI-AGENT/backend/bob",
+    "problem": "Repositories define different missing-box vocabularies, escalation keys and generator signatures.",
+    "repair": "V2 external contract is authoritative for valid live briefs; old embedded helper modules remain and legacy briefs are ignored."
+  },
+  {
+    "id": "BOB-031",
+    "severity": "P1",
+    "status": "Open",
+    "title": "Missing clean database baseline",
+    "file": "supabase/migrations",
+    "problem": "Bob shipped no migrations; REI still lacks definitions for all shared source tables.",
+    "repair": "Bob-owned additions and RPCs supplied; complete existing REI baseline/introspection and clean installation remain required."
+  },
+  {
+    "id": "BOB-032",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Tracked environment configuration",
+    "file": ".env",
+    "problem": "A .env file was committed; checked service-key values were placeholders, not established live secrets.",
+    "repair": "Removed from new tree and ignored; local file preserved. History remains unchanged."
+  },
+  {
+    "id": "BOB-033",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "No tests or hosted regression",
+    "file": "tests",
+    "problem": "Original repository had no tests or CI.",
+    "repair": "206 Python tests, actual SQL contracts, coverage, lint and hosted workflow."
+  },
+  {
+    "id": "BOB-034",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Unpinned dependencies and unused scheduler",
+    "file": "requirements.txt",
+    "problem": "Install results could change and schedule was unused.",
+    "repair": "Exact direct dependencies, uv transitive lock, Python bounds and removed unused dependency."
+  },
+  {
+    "id": "BOB-035",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "No graceful worker shutdown",
+    "file": "backend/main.py",
+    "problem": "Infinite sleeping worker had no shutdown signal path.",
+    "repair": "SIGTERM/SIGINT stop event; stop new claims between bounded jobs and event sends."
+  },
+  {
+    "id": "BOB-036",
+    "severity": "P1",
+    "status": "Partial",
+    "title": "Operational alerting and real infrastructure unverified",
+    "file": "backend/worker/loop.py",
+    "problem": "No heartbeat, dead-letter alert, retention policy or real multi-backend fault campaign.",
+    "repair": "Durable quarantine/retry state and runbook available; production monitoring, retention and actual provider/database recovery remain required."
+  },
+  {
+    "id": "BOB-037",
+    "severity": "P2",
+    "status": "Open",
+    "title": "Market enrichment, simulations and autonomous underwriting absent",
+    "file": "backend/intel",
+    "problem": "Intel and scoring packages were empty; no comps ingestion, market reasoning model or evaluation loop exists here.",
+    "repair": "Assign valuation to a verified comps service and permissions to human governance. Add sourced market/simulation roles only after their real contracts and evaluation gates exist."
+  },
+  {
+    "id": "BOB-038",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Actual intel assembly mixed cents and dollars in conflict checks",
+    "file": "REI-AGENT/backend/lib/intel_assembler.py",
+    "problem": "Helper unit tests used cents, but assembly passed dollar ARV/floor against cents max offer, manufacturing conflicts. Property profile money lacked a unit.",
+    "repair": "Full assembly regression reproduces the error; comparisons and structured money preserve integer cents with USD_cents metadata. Invalid money denies through conflict state."
+  }
+]

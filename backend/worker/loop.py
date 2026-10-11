@@ -1,128 +1,65 @@
 from __future__ import annotations
 import time
 from loguru import logger
-from backend.config import BOB_WORKER_INTERVAL_MINUTES, BOB_BATCH_SIZE
-from backend.db.client import (
-    get_leads_needing_brief,
-    save_call_brief,
-    load_intel_packet,
-    get_seller_memory,
-)
+from backend.config import settings, validate_settings
+from backend.db.client import claim_brief_jobs, complete_brief_job, fail_brief_job
 from backend.call_planner.brief_generator import generate_call_brief
-from backend.decisions.decision_logger import log_decision
-from backend.events.bob_events import emit_call_brief_created, emit_lead_ready_for_call
+from backend.decisions.decision_logger import decision_record
+from backend.events.bob_events import deliver_pending_events
 
 
-def _get_situation_label(lead: dict, prop: dict) -> str:
-    distress = (prop.get("distress_type") or "").lower()
-    mapping = {
-        "preforeclosure":  "preforeclosure",
-        "pre_foreclosure": "preforeclosure",
-        "probate":         "probate",
-        "inherited":       "inherited_property",
-        "vacant":          "vacant_property",
-        "landlord":        "tired_landlord",
-        "divorce":         "divorce",
-        "tax":             "tax_delinquent",
-        "code":            "code_violation",
-    }
-    for key, label in mapping.items():
-        if key in distress:
+def _get_situation_label(lead, prop):
+    distress = prop.get('distress_type')
+    if not isinstance(distress, str):
+        return 'unknown'
+    normalized = distress.lower().replace('_', '').replace('-', '')
+    for key, label in [('preforeclosure', 'preforeclosure'), ('foreclosure', 'preforeclosure'), ('probate', 'probate'), ('inherited', 'inherited_property'), ('vacant', 'vacant_property'), ('landlord', 'tired_landlord'), ('divorce', 'divorce'), ('tax', 'tax_delinquent'), ('code', 'code_violation')]:
+        if key in normalized:
             return label
-    return "unknown"
+    return 'unknown'
 
 
-def run_once() -> dict:
-    logger.info("bob_worker run_once starting")
-    leads = get_leads_needing_brief(BOB_BATCH_SIZE)
-    logger.info("bob_worker leads_to_process count={}", len(leads))
-
-    results = {"processed": 0, "briefs_created": 0, "errors": 0}
-
-    for lead in leads:
-        lead_id = lead.get("id")
-        if not lead_id:
-            continue
-
-        results["processed"] += 1
-        prop = lead.get("properties") or {}
-
+def run_once(stop_event=None):
+    result = {'processed': 0, 'briefs_created': 0, 'errors': 0}
+    for _ in range(settings().batch_size):
+        if stop_event is not None and stop_event.is_set():
+            break
+        claimed = claim_brief_jobs(batch_size=1)
+        if not claimed:
+            break
+        job = claimed[0]
+        result['processed'] += 1
         try:
-            intel_packet = load_intel_packet(lead_id) or {}
-            seller_memory = get_seller_memory(lead_id)
-            situation_label = _get_situation_label(lead, prop)
-            initial_trust = float(lead.get("initial_trust_score") or 5.0)
-            is_outbound = True
-
-            brief = generate_call_brief(
-                lead_id=lead_id,
-                lead=lead,
-                prop=prop,
-                intel_packet=intel_packet,
-                seller_memory=seller_memory,
-                situation_label=situation_label,
-                initial_trust=initial_trust,
-                is_outbound=is_outbound,
-            )
-
-            if not brief:
-                results["errors"] += 1
-                continue
-
-            brief_dict = brief.to_dict()
-            save_call_brief(lead_id, brief_dict)
-
-            log_decision(
-                lead_id=lead_id,
-                decision_type="call_brief",
-                inputs={
-                    "situation_label": situation_label,
-                    "call_count": len((seller_memory.get("call_summaries") or [])),
-                    "packet_state": intel_packet.get("packet_state", "missing"),
-                },
-                output=brief_dict,
-                reason_codes=[
-                    f"missing:{brief.missing_box}",
-                    f"phase:{brief.phase}",
-                    f"mood:{brief.mood}",
-                ],
-                confidence=brief.confidence,
-            )
-
-            results["briefs_created"] += 1
+            snapshot = job['snapshot']
+            lead = snapshot['lead']
+            prop = snapshot.get('property') or {}
+            packet = snapshot.get('packet') or {}
+            brief = generate_call_brief(job['lead_id'], lead, prop, packet, lead, situation_label=_get_situation_label(lead, prop), ttl_hours=settings().refresh_hours).to_dict()
+            complete_brief_job(job, brief, decision_record(job['lead_id'], brief, job['source_fingerprint']))
+            result['briefs_created'] += 1
+        except Exception as error:
+            result['errors'] += 1
+            logger.error('bob_job_failed lead_id={} type={}', job.get('lead_id'), type(error).__name__)
             try:
-                emit_call_brief_created(
-                    lead_id=lead_id,
-                    phase=brief.phase,
-                    missing_box=brief.missing_box,
-                    mood=brief.mood,
-                    confidence=brief.confidence,
-                )
-                emit_lead_ready_for_call(
-                    lead_id=lead_id,
-                    priority_score=int(prop.get("distress_score") or 50),
-                    situation_label=situation_label,
-                )
-            except Exception as _ee:
-                logger.warning("bob_emit_failed lead_id={} error={}", lead_id, str(_ee))
-            logger.info(
-                "brief_saved lead_id={} phase={} box={} mood={}",
-                lead_id, brief.phase, brief.missing_box, brief.mood,
-            )
-
-        except Exception as e:
-            results["errors"] += 1
-            logger.error("bob_worker lead_failed lead_id={} error={}", lead_id, str(e))
-
-    logger.info("bob_worker run_once complete results={}", results)
-    return results
+                fail_brief_job(job, type(error).__name__)
+            except Exception as fail_error:
+                logger.error('bob_job_release_failed lead_id={} type={}', job.get('lead_id'), type(fail_error).__name__)
+    result['events'] = deliver_pending_events() if stop_event is None else deliver_pending_events(stop_event=stop_event)
+    logger.info('bob_run_complete results={}', result)
+    return result
 
 
-def run_loop() -> None:
-    logger.info("bob_worker starting interval={}min", BOB_WORKER_INTERVAL_MINUTES)
-    while True:
+def run_loop(stop_event=None):
+    config = settings()
+    validate_settings(config)
+    while stop_event is None or not stop_event.is_set():
+        started = time.monotonic()
         try:
-            run_once()
-        except Exception as e:
-            logger.error("bob_worker loop_error error={}", str(e))
-        time.sleep(BOB_WORKER_INTERVAL_MINUTES * 60)
+            run_once(stop_event=stop_event)
+        except Exception as error:
+            logger.error('bob_worker_run_failed type={}', type(error).__name__)
+        wait = max(1, config.interval_seconds - (time.monotonic() - started))
+        if stop_event is not None:
+            stop_event.wait(wait)
+        else:
+            time.sleep(wait)

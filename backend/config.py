@@ -1,11 +1,51 @@
 from __future__ import annotations
 import os
+from dataclasses import dataclass
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 load_dotenv()
 
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
-KARPATHYS_URL = os.environ.get("KARPATHYS_URL", "")
-BOB_WORKER_INTERVAL_MINUTES = int(os.environ.get("BOB_WORKER_INTERVAL_MINUTES", 5))
-BOB_BATCH_SIZE = int(os.environ.get("BOB_BATCH_SIZE", 20))
+
+def _integer(name, default, minimum, maximum):
+    raw = os.getenv(name, str(default))
+    value = int(raw)
+    if not minimum <= value <= maximum:
+        raise ValueError(f'{name} must be between {minimum} and {maximum}')
+    return value
+
+
+@dataclass(frozen=True)
+class Settings:
+    supabase_url: str
+    service_key: str
+    tenant_id: str
+    interval_seconds: int
+    batch_size: int
+    refresh_hours: int
+    lease_seconds: int
+    event_url: str
+    event_token: str
+
+
+def settings():
+    from uuid import UUID
+    tenant = os.getenv('BOB_TENANT_ID', '00000000-0000-0000-0000-000000000001')
+    UUID(tenant)
+    return Settings(
+        os.getenv('SUPABASE_URL', ''), os.getenv('SUPABASE_SERVICE_KEY', ''), tenant,
+        _integer('BOB_WORKER_INTERVAL_MINUTES', 5, 1, 60) * 60,
+        _integer('BOB_BATCH_SIZE', 20, 1, 100),
+        _integer('BOB_REFRESH_HOURS', 24, 1, 168),
+        _integer('BOB_LEASE_SECONDS', 120, 30, 600),
+        os.getenv('KARPATHYS_URL', '').rstrip('/'), os.getenv('KARPATHYS_WEBHOOK_SECRET', ''),
+    )
+
+
+def validate_settings(config):
+    if urlparse(config.supabase_url).scheme != 'https' or not config.service_key:
+        raise ValueError('HTTPS Supabase configuration is required')
+    if any(marker in config.service_key.lower() for marker in ('placeholder', 'your-', 'your_', 'example')):
+        raise ValueError('Supabase service key is a placeholder')
+    if config.event_url and (urlparse(config.event_url).scheme != 'https' or not config.event_token):
+        raise ValueError('Configured event delivery requires HTTPS and KARPATHYS_WEBHOOK_SECRET')
