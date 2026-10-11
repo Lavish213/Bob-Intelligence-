@@ -1,3 +1,13 @@
+# Current second-audit result
+
+The first audit below is retained as historical evidence. The latest campaign has **51 findings: 46 addressed in code, three partial, two open**. Current local engineering assessment: **B+ provisional**, not A production certification. Latest tests: **237 Bob tests, 51 embedded PostgreSQL checks, actual eight-check Bob→Sophia→SQL→Bob round trip**, and the updated complete REI suite recorded in the coordinated report. Both draft PRs are updated; nothing deployed.
+
+Read REI `docs/BOB-RECOVERY-REAUDIT.md` for the persistent-volume, receipt endpoint, recovery and deployment contract. This integration explicitly targets REI-AGENT; the separate Sophia-Agent rebuild has different tables and another Bob worker. The missing full schema baseline and absent market/underwriting engine remain open; real infrastructure, audio and fallback migration validation remain partial. No artificial A grade is assigned.
+
+Latest evidence: [Bob regressions](test-evidence/recovery-pytest.txt), [database contracts](test-evidence/recovery-database.txt), [coverage](test-evidence/recovery-coverage.json), [static checks](test-evidence/recovery-lint.txt).
+
+---
+
 # Bob end-to-end audit and repair
 
 Audited original Bob commit `16b6e55e85cf38c1d17eb438ac5eeb3f9243d9b9`, all 669 Python source lines and the complete tracked-file inventory. Compared its actual producers/consumers with REI's tested repair branch. Original code quality/integration grade: **D−**. Repaired local engineering grade: **B− provisional**. These are reviewer judgments, not measured production grades or a claim of A-level autonomous operation.

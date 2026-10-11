@@ -56,11 +56,11 @@
   {
     "id": "BOB-007",
     "severity": "P1",
-    "status": "Partial",
+    "status": "Addressed",
     "title": "Event path and authentication mismatch",
     "file": "backend/events/bob_events.py",
     "problem": "Bob omitted the /api/ingest prefix and the secret convention used by REI. Receiver implementation was not provided.",
-    "repair": "Sender aligned to REI convention; receiver authorization, schema, idempotency and route remain unverified."
+    "repair": "Explicit full BOB_EVENT_URL targets a tested authenticated REI receiver with exact committed-event binding and persisted acknowledgment. Inspected Karpathys route does not exist; no guessed external route."
   },
   {
     "id": "BOB-008",
@@ -254,20 +254,20 @@
   {
     "id": "BOB-029",
     "severity": "P1",
-    "status": "Partial",
+    "status": "Addressed",
     "title": "Feedback had no verified producer/consumer bridge",
     "file": "REI-AGENT/backend/voice/agent.py",
     "problem": "Bob read different memory and prior calls/topics were substituted for proof.",
-    "repair": "Live unambiguous frames create timestamped facts; tenant/call-bound RPC merges newer evidence. REI process death before post-call RPC can still lose that handoff."
+    "repair": "Actual cross-repository round trip plus per-turn WAL fact journal, acknowledged Supabase receipt, retry/replay and recovery process. Production persistence acceptance tracked separately."
   },
   {
     "id": "BOB-030",
     "severity": "P2",
-    "status": "Partial",
+    "status": "Addressed",
     "title": "Two incompatible Bob planner implementations",
     "file": "REI-AGENT/backend/bob",
     "problem": "Repositories define different missing-box vocabularies, escalation keys and generator signatures.",
-    "repair": "V2 external contract is authoritative for valid live briefs; old embedded helper modules remain and legacy briefs are ignored."
+    "repair": "Removed inactive REI embedded planner, legacy brief contract and owner-call fallback generator. Standalone V2 Bob is the explicit source for this integration; separate Sophia rebuild tracked separately."
   },
   {
     "id": "BOB-031",
@@ -340,5 +340,122 @@
     "file": "REI-AGENT/backend/lib/intel_assembler.py",
     "problem": "Helper unit tests used cents, but assembly passed dollar ARV/floor against cents max offer, manufacturing conflicts. Property profile money lacked a unit.",
     "repair": "Full assembly regression reproduces the error; comparisons and structured money preserve integer cents with USD_cents metadata. Invalid money denies through conflict state."
+  },
+  {
+    "id": "BOB-039",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Unrelated speech refreshed old verified facts",
+    "file": "REI context_tracker",
+    "problem": "State carry-over was timestamped as new seller evidence.",
+    "repair": "Record only newly observed facts and tool-confirmed next steps."
+  },
+  {
+    "id": "BOB-040",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Spoken address rebound canonical property",
+    "file": "REI context_tracker",
+    "problem": "Wrong address replaced authenticated property address and could confirm itself on repetition.",
+    "repair": "Preserve server-bound address; mismatches cannot confirm it."
+  },
+  {
+    "id": "BOB-041",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Seller-sourced mood lacked freshness",
+    "file": "backend/call_planner/brief_generator.py",
+    "problem": "Source alone accepted ancient or untimed reported emotion.",
+    "repair": "Require valid seller provenance and timestamp within 24 hours."
+  },
+  {
+    "id": "BOB-042",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Equal-time confirmation could replace denial",
+    "file": "supabase/migrations/20261013_bob_feedback_health.sql",
+    "problem": "Equal timestamp replay used >= and could undo a denial.",
+    "repair": "Denial takes precedence at equal timestamps; newer explicit evidence required."
+  },
+  {
+    "id": "BOB-043",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Corrupt legacy facts poisoned merges",
+    "file": "supabase/migrations/20261013_bob_feedback_health.sql",
+    "problem": "Malformed old timestamp raised during valid new evidence merge.",
+    "repair": "Treat malformed legacy timestamp as unverified; validate new evidence strictly."
+  },
+  {
+    "id": "BOB-044",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Any HTTP success counted as persisted receipt",
+    "file": "backend/events/bob_events.py",
+    "problem": "Receiver HTML/unrelated 200 or mismatched receipt could drop delivery.",
+    "repair": "Require persisted status and exact stable event ID."
+  },
+  {
+    "id": "BOB-045",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Free-form strategy text entered guidance",
+    "file": "backend/call_planner/avoidances_builder.py",
+    "problem": "Source strings could carry arbitrary instructions into model context.",
+    "repair": "Approved strategy codes map to fixed phrases; unknown strings never copied."
+  },
+  {
+    "id": "BOB-046",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "No schema/worker integration health contract",
+    "file": "backend/health.py",
+    "problem": "Dead worker, missing contract and quarantine were not actively exposed.",
+    "repair": "Startup contract verification, durable heartbeat, operator health and failure exit."
+  },
+  {
+    "id": "BOB-047",
+    "severity": "P1",
+    "status": "Partial",
+    "title": "Separate Sophia rebuild has incompatible schema and Bob",
+    "file": "Sophia-Agent/bob and backend/voice/context.py",
+    "problem": "A second deployable owns a different planner and seller_memory/lead_intel_packets schema.",
+    "repair": "Explicit REI target and fail-closed contract; rebuild remains a separate fallback pending migration decision."
+  },
+  {
+    "id": "BOB-048",
+    "severity": "P2",
+    "status": "Addressed",
+    "title": "Duplicate context and event function definitions",
+    "file": "REI context_tracker and karpathys/events.py",
+    "problem": "Later definitions silently replaced earlier definitions.",
+    "repair": "Removed duplicates; expanded static check includes F811."
+  },
+  {
+    "id": "BOB-049",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Questions and hypothetical speech became positive facts",
+    "file": "REI context_tracker",
+    "problem": "Keywords in questions/conditional statements were treated as confirmed checklist evidence.",
+    "repair": "Conservative question/hypothetical/third-party gating and direct motivation provenance tests."
+  },
+  {
+    "id": "BOB-050",
+    "severity": "P1",
+    "status": "Addressed",
+    "title": "Generic affirmative could confirm ownership",
+    "file": "REI context_tracker",
+    "problem": "Yes I can hear you / this is a bad time could set owner confirmation.",
+    "repair": "Owner-answer shortcut accepts only a short identity affirmation; explicit ownership still follows analysis."
+  },
+  {
+    "id": "BOB-051",
+    "severity": "P1",
+    "status": "Partial",
+    "title": "Restart durability depends on deployment volume",
+    "file": "REI backend/lib/db.py",
+    "problem": "Hangup-only memory was lost on crash; ephemeral container replacement still cannot retain a local journal.",
+    "repair": "Per-turn durable local WAL, atomic remote receipts and replay tests implemented; real persistent-volume kill/restart test still required."
   }
 ]

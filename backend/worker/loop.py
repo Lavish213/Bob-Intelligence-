@@ -2,7 +2,7 @@ from __future__ import annotations
 import time
 from loguru import logger
 from backend.config import settings, validate_settings
-from backend.db.client import claim_brief_jobs, complete_brief_job, fail_brief_job
+from backend.db.client import claim_brief_jobs, complete_brief_job, fail_brief_job, report_worker_run
 from backend.call_planner.brief_generator import generate_call_brief
 from backend.decisions.decision_logger import decision_record
 from backend.events.bob_events import deliver_pending_events
@@ -45,6 +45,11 @@ def run_once(stop_event=None):
             except Exception as fail_error:
                 logger.error('bob_job_release_failed lead_id={} type={}', job.get('lead_id'), type(fail_error).__name__)
     result['events'] = deliver_pending_events() if stop_event is None else deliver_pending_events(stop_event=stop_event)
+    try:
+        report_worker_run(result)
+    except Exception as error:
+        result['errors'] += 1
+        logger.error('bob_heartbeat_failed type={}', type(error).__name__)
     logger.info('bob_run_complete results={}', result)
     return result
 

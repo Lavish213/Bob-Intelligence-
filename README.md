@@ -25,7 +25,7 @@ Configure an untracked `.env` from `.env.example`. The worker refuses placeholde
 3. Apply `supabase/migrations/20261011_bob_durable_briefs.sql` once, from this repository, in staging. It adds brief/checklist columns, job leases, decision history, event outbox and restricted RPCs. Do not apply a copied migration through a second independent deployment system.
 4. Deploy the matching REI brief consumer and feedback bridge from its repair branch. Legacy/unversioned, malformed, expired and wrong-lead briefs are ignored in favor of the normal call policy.
 5. Start Bob with the service role and `BOB_TENANT_ID`. Verify claim/commit/fact-feedback transactions and lease recovery against actual Supabase before enabling production.
-6. Leave `KARPATHYS_URL` empty until the receiving service proves the contract. Optional delivery uses HTTPS, `/api/ingest/bob/brief-created`, `X-Karpathys-Secret` from `KARPATHYS_WEBHOOK_SECRET`, and `Idempotency-Key`. The receiver must independently authorize, deduplicate and validate events. A successful HTTP status establishes acceptance, not completed downstream work.
+6. Leave `BOB_EVENT_URL` empty until the receiving service proves the contract. Optional delivery uses HTTPS, `/api/ingest/bob/brief-created`, `X-Karpathys-Secret` from `KARPATHYS_WEBHOOK_SECRET`, and `Idempotency-Key`. The receiver must independently authorize, deduplicate and validate events. A matching persisted event receipt establishes stored notification, not completed downstream work.
 7. Record controlled real calls and validate permissions, suppression, callbacks and booking. Bob never emits an automatic `lead-ready` instruction and all dialing still requires REI preflight.
 
 ## Operating the worker
@@ -37,3 +37,9 @@ Operators should monitor tenant-filtered `bob_brief_jobs` (quarantined/failures/
 The event transport is at least once. A response can be lost after a receiver commits; retries keep the same event ID. Receiver deduplication is therefore required. External delivery may be disabled while Bob still writes the shared brief and retains a local event record.
 
 Audit, grades, all findings and local test limits: [BOB-AUDIT.md](docs/BOB-AUDIT.md), [finding ledger](docs/BOB-FINDINGS.json).
+
+## Recovery upgrade
+
+Contract 2.1 additionally requires migration `20261013_bob_feedback_health.sql`, deployed REI durable fact journaling on a persistent local volume, and startup schema checks. `BOB_EVENT_URL` is an optional **full endpoint URL**, not a Karpathys base URL. Set it to `https://<rei-backend>/api/ingest/bob/brief-created` with the same `KARPATHYS_WEBHOOK_SECRET` on both services. A matching persisted event receipt is required. Notifications never authorize a call.
+
+Run `python -m backend.main --health` for heartbeat/quarantine/dead-event checks. Configure external monitoring for nonzero exit or REI operator `/api/bob/health`. Read the coordinated REI `docs/BOB-RECOVERY-REAUDIT.md` before rollout. Separate Sophia-Agent has a different schema and embedded planner; this worker explicitly targets REI-AGENT.

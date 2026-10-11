@@ -19,7 +19,13 @@ def build_avoidances(intel_packet, situation_label, call_count=0):
     items = (intel_packet.get('strategy_context') or {}).get('do_not_pitch') or []
     if not isinstance(items, list) or any(not isinstance(item, str) for item in items):
         raise ValueError('do_not_pitch must be a string list')
-    avoid.extend(item[:160] for item in items[:16])
+    approved = {'cash_offer': 'unapproved cash offers', 'subject_to': 'subject-to financing', 'seller_finance': 'seller financing', 'creative_finance': 'creative financing', 'novation': 'novation proposals', 'lease_option': 'lease options', 'listing': 'listing services'}
+    for item in items[:16]:
+        label = approved.get(item.lower().strip().replace(' ', '_'))
+        if label:
+            avoid.append(label)
+        else:
+            avoid.append('strategies without verified permission')
     if intel_packet.get('conflict_flags'):
         avoid.append('offer and strategy discussion until human conflict resolution')
     return list(dict.fromkeys(avoid))

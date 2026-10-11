@@ -38,14 +38,14 @@ def settings():
         _integer('BOB_BATCH_SIZE', 20, 1, 100),
         _integer('BOB_REFRESH_HOURS', 24, 1, 168),
         _integer('BOB_LEASE_SECONDS', 120, 30, 600),
-        os.getenv('KARPATHYS_URL', '').rstrip('/'), os.getenv('KARPATHYS_WEBHOOK_SECRET', ''),
+        os.getenv('BOB_EVENT_URL', ''), os.getenv('KARPATHYS_WEBHOOK_SECRET', ''),
     )
 
 
 def validate_settings(config):
-    if urlparse(config.supabase_url).scheme != 'https' or not config.service_key:
+    if urlparse(config.supabase_url).scheme != 'https' or not urlparse(config.supabase_url).hostname or not config.service_key:
         raise ValueError('HTTPS Supabase configuration is required')
     if any(marker in config.service_key.lower() for marker in ('placeholder', 'your-', 'your_', 'example')):
         raise ValueError('Supabase service key is a placeholder')
-    if config.event_url and (urlparse(config.event_url).scheme != 'https' or not config.event_token):
+    if config.event_url and (urlparse(config.event_url).scheme != 'https' or not urlparse(config.event_url).hostname or urlparse(config.event_url).username or urlparse(config.event_url).query or urlparse(config.event_url).fragment or not config.event_token):
         raise ValueError('Configured event delivery requires HTTPS and KARPATHYS_WEBHOOK_SECRET')

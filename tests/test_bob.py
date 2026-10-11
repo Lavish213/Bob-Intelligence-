@@ -157,7 +157,7 @@ def test_event_delivery_executes_and_checks_http_status(monkeypatch, code):
     finish = MagicMock(return_value=True)
     monkeypatch.setattr(bob_events, 'finish_event', finish)
     client = MagicMock()
-    response = httpx.Response(code, request=httpx.Request('POST', 'https://example.test'))
+    response = httpx.Response(code, json={'status': 'persisted', 'event_id': 'event'}, request=httpx.Request('POST', 'https://example.test'))
     client.__enter__.return_value.post.return_value = response
     monkeypatch.setattr(bob_events.httpx, 'Client', lambda **kwargs: client)
     result = bob_events.deliver_pending_events()
@@ -165,7 +165,7 @@ def test_event_delivery_executes_and_checks_http_status(monkeypatch, code):
     assert result['accepted'] == int(code < 300)
     assert client.__enter__.return_value.post.call_args.kwargs['headers']['Idempotency-Key'] == 'event'
     assert client.__enter__.return_value.post.call_args.kwargs['headers']['X-Karpathys-Secret'] == 'test-token'
-    assert client.__enter__.return_value.post.call_args.args[0] == 'https://example.test/api/ingest/bob/brief-created'
+    assert client.__enter__.return_value.post.call_args.args[0] == 'https://example.test'
 
 
 def test_events_disabled_does_not_claim_or_send(monkeypatch):

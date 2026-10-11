@@ -55,3 +55,16 @@ def claim_events(batch_size=None):
 def finish_event(event_id, token, accepted):
     response = get_client().rpc('bob_finish_event', {'p_tenant_id': settings().tenant_id, 'p_event_id': event_id, 'p_token': token, 'p_accepted': accepted}).execute()
     return response.data is True
+
+
+def integration_health():
+    response = get_client().rpc('bob_integration_health', {'p_tenant_id': settings().tenant_id}).execute()
+    if not isinstance(response.data, dict) or response.data.get('contract_version') != '2.1' or response.data.get('backend') != 'REI-AGENT':
+        raise RuntimeError('Shared database does not satisfy Bob/Sophia contract 2.1')
+    return response.data
+
+
+def report_worker_run(result):
+    response = get_client().rpc('bob_report_worker_run', {'p_tenant_id': settings().tenant_id, 'p_errors': result['errors'] + result.get('events', {}).get('failed', 0), 'p_processed': result['processed'], 'p_briefs_created': result['briefs_created']}).execute()
+    if response.data is not True:
+        raise RuntimeError('Worker heartbeat was not persisted')

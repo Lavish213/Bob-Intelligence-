@@ -56,7 +56,7 @@ def generate_call_brief(lead_id, lead, prop, intel_packet, seller_memory, situat
         phase, objective = 'WRAP', 'Do not contact this seller. Honor suppression.'
     mood = 'unknown'
     mood_evidence = lead.get('seller_mood')
-    if isinstance(mood_evidence, dict) and mood_evidence.get('source') in {'seller', 'transcript_verified'}:
+    if isinstance(mood_evidence, dict) and mood_evidence.get('source') in {'seller', 'transcript_verified'} and _packet_current({'assembled_at': mood_evidence.get('verified_at')}):
         if isinstance(mood_evidence.get('value'), str) and mood_evidence.get('value') in {'guarded', 'open', 'skeptical', 'distressed', 'motivated'}:
             mood = mood_evidence['value']
     now = datetime.now(timezone.utc)

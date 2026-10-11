@@ -22,9 +22,10 @@ def deliver_pending_events(stop_event=None):
         accepted = False
         try:
             with httpx.Client(timeout=3.0, follow_redirects=False) as client:
-                response = client.post(config.event_url + '/api/ingest/bob/brief-created', json=event['payload'], headers={'X-Karpathys-Secret': config.event_token, 'Idempotency-Key': event['id']})
+                response = client.post(config.event_url, json=event['payload'], headers={'X-Karpathys-Secret': config.event_token, 'Idempotency-Key': event['id']})
                 response.raise_for_status()
-                accepted = 200 <= response.status_code < 300
+                receipt = response.json() if 200 <= response.status_code < 300 else {}
+                accepted = isinstance(receipt, dict) and receipt.get('status') == 'persisted' and receipt.get('event_id') == event['id']
         except Exception as error:
             logger.warning('bob_event_delivery_failed event_id={} type={}', event['id'], type(error).__name__)
         try:
