@@ -1,42 +1,31 @@
 from __future__ import annotations
-from loguru import logger
+from backend.contracts.call_brief import CHECKBOX_PRIORITY
 
 
-def select_missing_checkbox(
-    intel_packet: dict,
-    seller_memory: dict,
-    lead: dict,
-    prop: dict,
-) -> str:
-    call_summaries = seller_memory.get("call_summaries") or []
-    timeline_mentioned = seller_memory.get("timeline_mentioned")
-    motivation_level = seller_memory.get("motivation_level")
-    objections = seller_memory.get("objections_raised") or []
+def confirmed_facts(memory, lead):
+    from datetime import datetime, timezone
+    facts = {}
+    prior = lead.get('prior_boxes') or {}
+    if not isinstance(prior, dict):
+        prior = {}
+    for box in CHECKBOX_PRIORITY:
+        item = prior.get(box)
+        if isinstance(item, dict) and item.get('confirmed') is True and item.get('source') in {'seller', 'operator', 'transcript_verified'}:
+            try:
+                verified = datetime.fromisoformat(item['verified_at'].replace('Z', '+00:00'))
+                age = (datetime.now(timezone.utc) - verified).total_seconds()
+                if verified.tzinfo is not None and 0 <= age <= 86400:
+                    facts[box] = item
+            except (KeyError, TypeError, ValueError, AttributeError):
+                continue
+    return facts
 
-    distress = (prop.get("distress_type") or "").lower()
-    occupancy_known = "vacant" in distress or prop.get("vacant") is True
 
-    call_count = len(call_summaries)
-    owner_confirmed = call_count > 0
-
-    if not owner_confirmed:
-        return "right_person"
-
-    address = prop.get("address") or lead.get("address")
-    if not address:
-        return "property_confirmed"
-
-    if not occupancy_known:
-        return "occupancy"
-
-    property_issues = seller_memory.get("hot_topics") or []
-    if not property_issues:
-        return "condition"
-
-    if not timeline_mentioned:
-        return "timeline"
-
-    if motivation_level is None:
-        return "motivation"
-
-    return "next_step"
+def select_missing_checkbox(intel_packet, seller_memory, lead, prop):
+    facts = confirmed_facts(seller_memory, lead)
+    if lead.get('ownership_denied') is True:
+        return 'right_person'
+    for box in CHECKBOX_PRIORITY:
+        if box not in facts:
+            return box
+    return 'none'

@@ -1,0 +1,8 @@
+{
+  "cutoff_filter": "call_brief.is.null,call_brief_generated_at.lt.2026-06-07T21:26:06.932595+00:00",
+  "ownership_after_wrong_number_summary": "condition",
+  "approval_threshold_for_25000000_cents": "offer above $25,000,000 requires operator approval",
+  "event_coroutine_scheduled": 1,
+  "pending_tasks_on_nonrunning_loop": 1,
+  "http_requests_executed": 0
+}

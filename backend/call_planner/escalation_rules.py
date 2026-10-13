@@ -1,51 +1,24 @@
 from __future__ import annotations
-
-_ALWAYS_ESCALATE = [
-    "exact offer request",
-    "stop calling or DNC request",
-    "legal or lawsuit threat",
-    "bankruptcy mention",
-]
-
-_SITUATION_ESCALATIONS: dict[str, list[str]] = {
-    "preforeclosure":     ["foreclosure legal question", "auction date question"],
-    "pre_foreclosure":    ["foreclosure legal question", "auction date question"],
-    "probate":            ["probate attorney question", "estate complexity"],
-    "inherited_property": ["probate attorney question", "estate complexity"],
-    "inherited":          ["probate attorney question", "estate complexity"],
-    "divorce":            ["divorce attorney question", "court order question"],
-}
+from decimal import Decimal
 
 
-def build_escalation_rules(
-    intel_packet: dict,
-    situation_label: str,
-    seller_memory: dict,
-) -> list[str]:
-    rules = list(_ALWAYS_ESCALATE)
-
-    sit = (situation_label or "").lower()
-    for key, extras in _SITUATION_ESCALATIONS.items():
-        if key in sit:
-            for e in extras:
-                if e not in rules:
-                    rules.append(e)
-
-    motivation = seller_memory.get("motivation_level")
-    if motivation is not None and int(motivation) >= 8:
-        rules.append("high motivation detected — human takeover ready")
-
-    flags = (intel_packet or {}).get("conflict_flags") or []
-    if flags:
-        rules.append("intel conflict active — escalate before any offer discussion")
-
-    competitors = seller_memory.get("competitor_mentions") or []
-    if competitors:
-        rules.append("mentions other buyers — flag for Alanzo immediately")
-
-    compliance = (intel_packet or {}).get("compliance_context") or {}
-    threshold = compliance.get("requires_human_approval_above")
-    if threshold:
-        rules.append(f"offer above ${int(threshold):,} requires operator approval")
-
+def build_escalation_rules(intel_packet, situation_label, seller_memory):
+    rules = ['exact offer request: require verified price authority', 'legal, bankruptcy or lawsuit question: human review', 'human requested: offer an authorized transfer or callback', 'STOP or DNC: immediately suppress and end; never wait for operator approval']
+    situation = situation_label.lower()
+    if 'foreclosure' in situation:
+        rules.append('auction or foreclosure timeline: human review; no urgency pressure')
+    if 'probate' in situation or 'inherited' in situation:
+        rules.append('estate authority or probate question: human review')
+    if 'divorce' in situation:
+        rules.append('disputed sale authority: human review')
+    if intel_packet.get('conflict_flags'):
+        rules.append('intel conflict: deny offers until resolved by a human')
+    if seller_memory.get('competitor_mentions'):
+        rules.append('other buyers: acknowledge neutrally; do not manufacture urgency')
+    threshold = (intel_packet.get('compliance_context') or {}).get('requires_human_approval_above')
+    if threshold is not None:
+        if type(threshold) is not int or threshold <= 0:
+            rules.append('invalid approval threshold: deny pricing pending human review')
+        else:
+            rules.append(f'offer above ${Decimal(threshold) / 100:,.2f} requires operator approval')
     return rules
