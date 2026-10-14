@@ -1,0 +1,1350 @@
+{
+  "schema_version": "1.0",
+  "dataset": {
+    "rows": 2930,
+    "retained": 1943,
+    "exclusions": {
+      "outside_prespecified_property_or_transaction_scope": 987
+    },
+    "source_url": "https://jse.amstat.org/v19n3/decock/AmesHousing.txt",
+    "sha256": "6cfe6cb525ba437de428653a1040e2aed7d696640bf75203786a6d7a0e67cfcc"
+  },
+  "scope": "retrospective_as_is_research_model_comparison_not_current_market_or_arv_validation",
+  "distinct_out_of_fitting_and_calibration_sale_targets": 1124,
+  "model_sale_comparisons": 4496,
+  "folds": {
+    "2008": {
+      "cutoff": "2008-01-01",
+      "fitting_rows": 680,
+      "calibration_rows": 120,
+      "target_rows": 432,
+      "artifact_id": "65b86b5c5bac769be0f197034b2dd02af4ce70cd03354b039220e07b8553ce77",
+      "models": {
+        "ridge": {
+          "count": 432,
+          "mean_absolute_error_dollars": "11310.1079",
+          "median_absolute_percentage_error": "5.0661",
+          "mean_absolute_percentage_error": "6.8912",
+          "mean_signed_percentage_error": "1.6095",
+          "within_10_percent": 344,
+          "worst_absolute_percentage_error": "150.6031",
+          "error_grade_counts": {
+            "A": 214,
+            "B": 130,
+            "C": 53,
+            "D": 21,
+            "F": 14
+          },
+          "calibrated_residual_band_contains_sale": 383,
+          "residual_band_empirical_coverage_percent": "88.6574"
+        },
+        "lightgbm": {
+          "count": 432,
+          "mean_absolute_error_dollars": "13427.1898",
+          "median_absolute_percentage_error": "5.1847",
+          "mean_absolute_percentage_error": "7.7981",
+          "mean_signed_percentage_error": "1.4438",
+          "within_10_percent": 323,
+          "worst_absolute_percentage_error": "117.7501",
+          "error_grade_counts": {
+            "A": 205,
+            "B": 118,
+            "C": 55,
+            "D": 26,
+            "F": 28
+          },
+          "calibrated_residual_band_contains_sale": 391,
+          "residual_band_empirical_coverage_percent": "90.5093"
+        },
+        "catboost": {
+          "count": 432,
+          "mean_absolute_error_dollars": "12159.7937",
+          "median_absolute_percentage_error": "4.8892",
+          "mean_absolute_percentage_error": "7.1666",
+          "mean_signed_percentage_error": "1.3998",
+          "within_10_percent": 334,
+          "worst_absolute_percentage_error": "113.8899",
+          "error_grade_counts": {
+            "A": 221,
+            "B": 113,
+            "C": 47,
+            "D": 28,
+            "F": 23
+          },
+          "calibrated_residual_band_contains_sale": 385,
+          "residual_band_empirical_coverage_percent": "89.1204"
+        },
+        "ensemble": {
+          "count": 432,
+          "mean_absolute_error_dollars": "10954.0903",
+          "median_absolute_percentage_error": "4.4282",
+          "mean_absolute_percentage_error": "6.6075",
+          "mean_signed_percentage_error": "1.4096",
+          "within_10_percent": 347,
+          "worst_absolute_percentage_error": "126.8358",
+          "error_grade_counts": {
+            "A": 230,
+            "B": 117,
+            "C": 51,
+            "D": 12,
+            "F": 22
+          },
+          "calibrated_residual_band_contains_sale": 393,
+          "residual_band_empirical_coverage_percent": "90.9722"
+        }
+      },
+      "model_comparison_policy": "fixed_parameters_equal_log_weight_ensemble_no_target_year_tuning",
+      "catboost_top_feature_importance": [
+        {
+          "feature": "Gr Liv Area",
+          "importance_percent": "17.6390"
+        },
+        {
+          "feature": "Overall Qual",
+          "importance_percent": "15.4765"
+        },
+        {
+          "feature": "Full Bath",
+          "importance_percent": "5.4741"
+        },
+        {
+          "feature": "Total Bsmt SF",
+          "importance_percent": "5.1523"
+        },
+        {
+          "feature": "Lot Area",
+          "importance_percent": "4.7721"
+        },
+        {
+          "feature": "Bsmt Qual",
+          "importance_percent": "4.2443"
+        },
+        {
+          "feature": "1st Flr SF",
+          "importance_percent": "4.2040"
+        },
+        {
+          "feature": "Garage Area",
+          "importance_percent": "4.0262"
+        },
+        {
+          "feature": "Paved Drive",
+          "importance_percent": "3.1300"
+        },
+        {
+          "feature": "Kitchen Qual",
+          "importance_percent": "3.0900"
+        },
+        {
+          "feature": "Fireplaces",
+          "importance_percent": "2.3193"
+        },
+        {
+          "feature": "Overall Cond",
+          "importance_percent": "2.2726"
+        },
+        {
+          "feature": "Year Remod/Add",
+          "importance_percent": "2.2460"
+        },
+        {
+          "feature": "BsmtFin SF 1",
+          "importance_percent": "2.1520"
+        },
+        {
+          "feature": "2nd Flr SF",
+          "importance_percent": "2.1350"
+        }
+      ],
+      "quality_segments": {
+        "10": {
+          "count": 3,
+          "mean_absolute_error_dollars": "60366.8633",
+          "median_absolute_percentage_error": "1.8392",
+          "mean_absolute_percentage_error": "10.2197",
+          "mean_signed_percentage_error": "-10.2197",
+          "within_10_percent": 2,
+          "worst_absolute_percentage_error": "27.4522",
+          "error_grade_counts": {
+            "A": 2,
+            "B": 0,
+            "C": 0,
+            "D": 0,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 2,
+          "residual_band_empirical_coverage_percent": "66.6667"
+        },
+        "3": {
+          "count": 3,
+          "mean_absolute_error_dollars": "13402.3000",
+          "median_absolute_percentage_error": "15.7396",
+          "mean_absolute_percentage_error": "23.0456",
+          "mean_signed_percentage_error": "23.0456",
+          "within_10_percent": 1,
+          "worst_absolute_percentage_error": "46.5356",
+          "error_grade_counts": {
+            "A": 0,
+            "B": 1,
+            "C": 0,
+            "D": 1,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 1,
+          "residual_band_empirical_coverage_percent": "33.3333"
+        },
+        "4": {
+          "count": 24,
+          "mean_absolute_error_dollars": "14700.0504",
+          "median_absolute_percentage_error": "9.7711",
+          "mean_absolute_percentage_error": "15.7211",
+          "mean_signed_percentage_error": "7.8750",
+          "within_10_percent": 12,
+          "worst_absolute_percentage_error": "126.8358",
+          "error_grade_counts": {
+            "A": 4,
+            "B": 8,
+            "C": 6,
+            "D": 2,
+            "F": 4
+          },
+          "calibrated_residual_band_contains_sale": 17,
+          "residual_band_empirical_coverage_percent": "70.8333"
+        },
+        "5": {
+          "count": 132,
+          "mean_absolute_error_dollars": "7912.3152",
+          "median_absolute_percentage_error": "4.3214",
+          "mean_absolute_percentage_error": "6.0958",
+          "mean_signed_percentage_error": "0.6937",
+          "within_10_percent": 110,
+          "worst_absolute_percentage_error": "31.3221",
+          "error_grade_counts": {
+            "A": 70,
+            "B": 40,
+            "C": 15,
+            "D": 1,
+            "F": 6
+          },
+          "calibrated_residual_band_contains_sale": 123,
+          "residual_band_empirical_coverage_percent": "93.1818"
+        },
+        "6": {
+          "count": 127,
+          "mean_absolute_error_dollars": "9211.4866",
+          "median_absolute_percentage_error": "3.8239",
+          "mean_absolute_percentage_error": "5.9882",
+          "mean_signed_percentage_error": "2.0691",
+          "within_10_percent": 102,
+          "worst_absolute_percentage_error": "30.3646",
+          "error_grade_counts": {
+            "A": 76,
+            "B": 26,
+            "C": 14,
+            "D": 4,
+            "F": 7
+          },
+          "calibrated_residual_band_contains_sale": 115,
+          "residual_band_empirical_coverage_percent": "90.5512"
+        },
+        "7": {
+          "count": 91,
+          "mean_absolute_error_dollars": "11315.0053",
+          "median_absolute_percentage_error": "3.9851",
+          "mean_absolute_percentage_error": "5.2483",
+          "mean_signed_percentage_error": "0.2418",
+          "within_10_percent": 77,
+          "worst_absolute_percentage_error": "24.0871",
+          "error_grade_counts": {
+            "A": 53,
+            "B": 24,
+            "C": 10,
+            "D": 3,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 87,
+          "residual_band_empirical_coverage_percent": "95.6044"
+        },
+        "8": {
+          "count": 44,
+          "mean_absolute_error_dollars": "18159.4241",
+          "median_absolute_percentage_error": "5.5440",
+          "mean_absolute_percentage_error": "6.8011",
+          "mean_signed_percentage_error": "-0.0386",
+          "within_10_percent": 36,
+          "worst_absolute_percentage_error": "31.7774",
+          "error_grade_counts": {
+            "A": 20,
+            "B": 16,
+            "C": 5,
+            "D": 1,
+            "F": 2
+          },
+          "calibrated_residual_band_contains_sale": 40,
+          "residual_band_empirical_coverage_percent": "90.9091"
+        },
+        "9": {
+          "count": 8,
+          "mean_absolute_error_dollars": "14386.7175",
+          "median_absolute_percentage_error": "4.1330",
+          "mean_absolute_percentage_error": "4.4151",
+          "mean_signed_percentage_error": "0.8544",
+          "within_10_percent": 7,
+          "worst_absolute_percentage_error": "11.5707",
+          "error_grade_counts": {
+            "A": 5,
+            "B": 2,
+            "C": 1,
+            "D": 0,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 8,
+          "residual_band_empirical_coverage_percent": "100.0000"
+        }
+      },
+      "identical_target_comparison": {
+        "old_unadjusted_shortlist": {
+          "count": 400,
+          "mean_absolute_error_dollars": "22948.8526",
+          "median_absolute_percentage_error": "10.0237",
+          "mean_absolute_percentage_error": "13.7628",
+          "mean_signed_percentage_error": "1.9351",
+          "within_10_percent": 198,
+          "worst_absolute_percentage_error": "162.4834",
+          "observed_comp_span_contains_sale": 257,
+          "error_grade_counts": {
+            "A": 98,
+            "B": 100,
+            "C": 80,
+            "D": 44,
+            "F": 78
+          }
+        },
+        "new_research_ensemble": {
+          "count": 400,
+          "mean_absolute_error_dollars": "10549.9060",
+          "median_absolute_percentage_error": "4.3085",
+          "mean_absolute_percentage_error": "6.4580",
+          "mean_signed_percentage_error": "1.4339",
+          "within_10_percent": 326,
+          "worst_absolute_percentage_error": "126.8358",
+          "error_grade_counts": {
+            "A": 219,
+            "B": 107,
+            "C": 45,
+            "D": 11,
+            "F": 18
+          },
+          "calibrated_residual_band_contains_sale": 366,
+          "residual_band_empirical_coverage_percent": "91.5000"
+        }
+      }
+    },
+    "2009": {
+      "cutoff": "2009-01-01",
+      "fitting_rows": 1049,
+      "calibration_rows": 186,
+      "target_rows": 466,
+      "artifact_id": "66cee5778cec250bcea54cfd12b872d5e783086ca256694c02effdfb5e4aa4cb",
+      "models": {
+        "ridge": {
+          "count": 466,
+          "mean_absolute_error_dollars": "11840.9961",
+          "median_absolute_percentage_error": "5.2133",
+          "mean_absolute_percentage_error": "6.9505",
+          "mean_signed_percentage_error": "1.9499",
+          "within_10_percent": 366,
+          "worst_absolute_percentage_error": "101.2641",
+          "error_grade_counts": {
+            "A": 225,
+            "B": 141,
+            "C": 59,
+            "D": 18,
+            "F": 23
+          },
+          "calibrated_residual_band_contains_sale": 425,
+          "residual_band_empirical_coverage_percent": "91.2017"
+        },
+        "lightgbm": {
+          "count": 466,
+          "mean_absolute_error_dollars": "12737.6111",
+          "median_absolute_percentage_error": "4.9321",
+          "mean_absolute_percentage_error": "7.2326",
+          "mean_signed_percentage_error": "1.5582",
+          "within_10_percent": 357,
+          "worst_absolute_percentage_error": "104.8215",
+          "error_grade_counts": {
+            "A": 236,
+            "B": 121,
+            "C": 59,
+            "D": 21,
+            "F": 29
+          },
+          "calibrated_residual_band_contains_sale": 416,
+          "residual_band_empirical_coverage_percent": "89.2704"
+        },
+        "catboost": {
+          "count": 466,
+          "mean_absolute_error_dollars": "12217.0849",
+          "median_absolute_percentage_error": "4.8729",
+          "mean_absolute_percentage_error": "7.0687",
+          "mean_signed_percentage_error": "2.0865",
+          "within_10_percent": 362,
+          "worst_absolute_percentage_error": "100.3224",
+          "error_grade_counts": {
+            "A": 236,
+            "B": 126,
+            "C": 56,
+            "D": 19,
+            "F": 29
+          },
+          "calibrated_residual_band_contains_sale": 419,
+          "residual_band_empirical_coverage_percent": "89.9142"
+        },
+        "ensemble": {
+          "count": 466,
+          "mean_absolute_error_dollars": "11196.3473",
+          "median_absolute_percentage_error": "4.4345",
+          "mean_absolute_percentage_error": "6.5341",
+          "mean_signed_percentage_error": "1.7973",
+          "within_10_percent": 373,
+          "worst_absolute_percentage_error": "102.1267",
+          "error_grade_counts": {
+            "A": 256,
+            "B": 117,
+            "C": 49,
+            "D": 24,
+            "F": 20
+          },
+          "calibrated_residual_band_contains_sale": 403,
+          "residual_band_empirical_coverage_percent": "86.4807"
+        }
+      },
+      "model_comparison_policy": "fixed_parameters_equal_log_weight_ensemble_no_target_year_tuning",
+      "catboost_top_feature_importance": [
+        {
+          "feature": "Gr Liv Area",
+          "importance_percent": "21.1335"
+        },
+        {
+          "feature": "Overall Qual",
+          "importance_percent": "11.6009"
+        },
+        {
+          "feature": "Total Bsmt SF",
+          "importance_percent": "5.8615"
+        },
+        {
+          "feature": "1st Flr SF",
+          "importance_percent": "5.4402"
+        },
+        {
+          "feature": "Exter Qual",
+          "importance_percent": "4.8059"
+        },
+        {
+          "feature": "Full Bath",
+          "importance_percent": "4.0920"
+        },
+        {
+          "feature": "Paved Drive",
+          "importance_percent": "3.4311"
+        },
+        {
+          "feature": "Lot Area",
+          "importance_percent": "3.0144"
+        },
+        {
+          "feature": "Year Built",
+          "importance_percent": "2.8693"
+        },
+        {
+          "feature": "Fireplace Qu",
+          "importance_percent": "2.7024"
+        },
+        {
+          "feature": "Half Bath",
+          "importance_percent": "2.5878"
+        },
+        {
+          "feature": "Overall Cond",
+          "importance_percent": "2.5442"
+        },
+        {
+          "feature": "Fireplaces",
+          "importance_percent": "2.3407"
+        },
+        {
+          "feature": "Kitchen Qual",
+          "importance_percent": "2.3047"
+        },
+        {
+          "feature": "Garage Area",
+          "importance_percent": "2.0290"
+        }
+      ],
+      "quality_segments": {
+        "1": {
+          "count": 1,
+          "mean_absolute_error_dollars": "13383.3900",
+          "median_absolute_percentage_error": "21.9400",
+          "mean_absolute_percentage_error": "21.9400",
+          "mean_signed_percentage_error": "21.9400",
+          "within_10_percent": 0,
+          "worst_absolute_percentage_error": "21.9400",
+          "error_grade_counts": {
+            "A": 0,
+            "B": 0,
+            "C": 0,
+            "D": 0,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 0,
+          "residual_band_empirical_coverage_percent": "0.0000"
+        },
+        "10": {
+          "count": 5,
+          "mean_absolute_error_dollars": "51367.2880",
+          "median_absolute_percentage_error": "10.9073",
+          "mean_absolute_percentage_error": "10.5155",
+          "mean_signed_percentage_error": "-1.9699",
+          "within_10_percent": 2,
+          "worst_absolute_percentage_error": "15.7716",
+          "error_grade_counts": {
+            "A": 1,
+            "B": 1,
+            "C": 1,
+            "D": 2,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 3,
+          "residual_band_empirical_coverage_percent": "60.0000"
+        },
+        "2": {
+          "count": 4,
+          "mean_absolute_error_dollars": "8721.0750",
+          "median_absolute_percentage_error": "12.3363",
+          "mean_absolute_percentage_error": "16.3034",
+          "mean_signed_percentage_error": "10.2525",
+          "within_10_percent": 1,
+          "worst_absolute_percentage_error": "30.7881",
+          "error_grade_counts": {
+            "A": 0,
+            "B": 1,
+            "C": 2,
+            "D": 0,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 2,
+          "residual_band_empirical_coverage_percent": "50.0000"
+        },
+        "3": {
+          "count": 4,
+          "mean_absolute_error_dollars": "3248.9175",
+          "median_absolute_percentage_error": "2.0936",
+          "mean_absolute_percentage_error": "3.7986",
+          "mean_signed_percentage_error": "1.7050",
+          "within_10_percent": 3,
+          "worst_absolute_percentage_error": "10.4631",
+          "error_grade_counts": {
+            "A": 3,
+            "B": 0,
+            "C": 1,
+            "D": 0,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 4,
+          "residual_band_empirical_coverage_percent": "100.0000"
+        },
+        "4": {
+          "count": 34,
+          "mean_absolute_error_dollars": "8822.4750",
+          "median_absolute_percentage_error": "4.5091",
+          "mean_absolute_percentage_error": "8.4570",
+          "mean_signed_percentage_error": "3.0807",
+          "within_10_percent": 24,
+          "worst_absolute_percentage_error": "32.4644",
+          "error_grade_counts": {
+            "A": 18,
+            "B": 6,
+            "C": 3,
+            "D": 1,
+            "F": 6
+          },
+          "calibrated_residual_band_contains_sale": 26,
+          "residual_band_empirical_coverage_percent": "76.4706"
+        },
+        "5": {
+          "count": 128,
+          "mean_absolute_error_dollars": "8677.9966",
+          "median_absolute_percentage_error": "4.9024",
+          "mean_absolute_percentage_error": "7.3303",
+          "mean_signed_percentage_error": "2.7803",
+          "within_10_percent": 105,
+          "worst_absolute_percentage_error": "102.1267",
+          "error_grade_counts": {
+            "A": 66,
+            "B": 39,
+            "C": 8,
+            "D": 8,
+            "F": 7
+          },
+          "calibrated_residual_band_contains_sale": 109,
+          "residual_band_empirical_coverage_percent": "85.1562"
+        },
+        "6": {
+          "count": 110,
+          "mean_absolute_error_dollars": "9472.7616",
+          "median_absolute_percentage_error": "4.7088",
+          "mean_absolute_percentage_error": "5.9863",
+          "mean_signed_percentage_error": "1.0042",
+          "within_10_percent": 92,
+          "worst_absolute_percentage_error": "27.4829",
+          "error_grade_counts": {
+            "A": 58,
+            "B": 34,
+            "C": 11,
+            "D": 4,
+            "F": 3
+          },
+          "calibrated_residual_band_contains_sale": 100,
+          "residual_band_empirical_coverage_percent": "90.9091"
+        },
+        "7": {
+          "count": 102,
+          "mean_absolute_error_dollars": "11447.2781",
+          "median_absolute_percentage_error": "4.2107",
+          "mean_absolute_percentage_error": "5.4610",
+          "mean_signed_percentage_error": "1.1211",
+          "within_10_percent": 84,
+          "worst_absolute_percentage_error": "18.6970",
+          "error_grade_counts": {
+            "A": 62,
+            "B": 22,
+            "C": 13,
+            "D": 5,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 91,
+          "residual_band_empirical_coverage_percent": "89.2157"
+        },
+        "8": {
+          "count": 57,
+          "mean_absolute_error_dollars": "15785.0575",
+          "median_absolute_percentage_error": "4.1031",
+          "mean_absolute_percentage_error": "5.9414",
+          "mean_signed_percentage_error": "1.6647",
+          "within_10_percent": 44,
+          "worst_absolute_percentage_error": "22.6391",
+          "error_grade_counts": {
+            "A": 34,
+            "B": 10,
+            "C": 8,
+            "D": 3,
+            "F": 2
+          },
+          "calibrated_residual_band_contains_sale": 48,
+          "residual_band_empirical_coverage_percent": "84.2105"
+        },
+        "9": {
+          "count": 21,
+          "mean_absolute_error_dollars": "18060.7557",
+          "median_absolute_percentage_error": "4.1632",
+          "mean_absolute_percentage_error": "5.2368",
+          "mean_signed_percentage_error": "-0.1282",
+          "within_10_percent": 18,
+          "worst_absolute_percentage_error": "18.2062",
+          "error_grade_counts": {
+            "A": 14,
+            "B": 4,
+            "C": 2,
+            "D": 1,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 20,
+          "residual_band_empirical_coverage_percent": "95.2381"
+        }
+      },
+      "identical_target_comparison": {
+        "old_unadjusted_shortlist": {
+          "count": 434,
+          "mean_absolute_error_dollars": "22177.7886",
+          "median_absolute_percentage_error": "8.5796",
+          "mean_absolute_percentage_error": "11.6739",
+          "mean_signed_percentage_error": "0.8239",
+          "within_10_percent": 256,
+          "worst_absolute_percentage_error": "103.8670",
+          "observed_comp_span_contains_sale": 303,
+          "error_grade_counts": {
+            "A": 139,
+            "B": 117,
+            "C": 70,
+            "D": 44,
+            "F": 64
+          }
+        },
+        "new_research_ensemble": {
+          "count": 434,
+          "mean_absolute_error_dollars": "11044.7594",
+          "median_absolute_percentage_error": "4.4214",
+          "mean_absolute_percentage_error": "6.3422",
+          "mean_signed_percentage_error": "1.7397",
+          "within_10_percent": 354,
+          "worst_absolute_percentage_error": "102.1267",
+          "error_grade_counts": {
+            "A": 242,
+            "B": 112,
+            "C": 42,
+            "D": 22,
+            "F": 16
+          },
+          "calibrated_residual_band_contains_sale": 382,
+          "residual_band_empirical_coverage_percent": "88.0184"
+        }
+      }
+    },
+    "2010": {
+      "cutoff": "2010-01-01",
+      "fitting_rows": 1446,
+      "calibration_rows": 256,
+      "target_rows": 226,
+      "artifact_id": "0250f06cda9fdc6df4fbc59fa0d310f303ebe3a9308fdfac53d4acf65043fcf9",
+      "models": {
+        "ridge": {
+          "count": 226,
+          "mean_absolute_error_dollars": "13411.7001",
+          "median_absolute_percentage_error": "5.9058",
+          "mean_absolute_percentage_error": "7.5118",
+          "mean_signed_percentage_error": "-0.0436",
+          "within_10_percent": 172,
+          "worst_absolute_percentage_error": "47.3742",
+          "error_grade_counts": {
+            "A": 90,
+            "B": 82,
+            "C": 32,
+            "D": 11,
+            "F": 11
+          },
+          "calibrated_residual_band_contains_sale": 202,
+          "residual_band_empirical_coverage_percent": "89.3805"
+        },
+        "lightgbm": {
+          "count": 226,
+          "mean_absolute_error_dollars": "12212.5261",
+          "median_absolute_percentage_error": "4.8161",
+          "mean_absolute_percentage_error": "6.8236",
+          "mean_signed_percentage_error": "-0.1736",
+          "within_10_percent": 178,
+          "worst_absolute_percentage_error": "40.7922",
+          "error_grade_counts": {
+            "A": 116,
+            "B": 62,
+            "C": 28,
+            "D": 11,
+            "F": 9
+          },
+          "calibrated_residual_band_contains_sale": 204,
+          "residual_band_empirical_coverage_percent": "90.2655"
+        },
+        "catboost": {
+          "count": 226,
+          "mean_absolute_error_dollars": "12694.5871",
+          "median_absolute_percentage_error": "5.6106",
+          "mean_absolute_percentage_error": "7.1092",
+          "mean_signed_percentage_error": "-0.4764",
+          "within_10_percent": 179,
+          "worst_absolute_percentage_error": "42.3719",
+          "error_grade_counts": {
+            "A": 100,
+            "B": 79,
+            "C": 22,
+            "D": 12,
+            "F": 13
+          },
+          "calibrated_residual_band_contains_sale": 198,
+          "residual_band_empirical_coverage_percent": "87.6106"
+        },
+        "ensemble": {
+          "count": 226,
+          "mean_absolute_error_dollars": "11909.4129",
+          "median_absolute_percentage_error": "5.0444",
+          "mean_absolute_percentage_error": "6.7317",
+          "mean_signed_percentage_error": "-0.2775",
+          "within_10_percent": 184,
+          "worst_absolute_percentage_error": "39.5918",
+          "error_grade_counts": {
+            "A": 112,
+            "B": 72,
+            "C": 23,
+            "D": 10,
+            "F": 9
+          },
+          "calibrated_residual_band_contains_sale": 203,
+          "residual_band_empirical_coverage_percent": "89.8230"
+        }
+      },
+      "model_comparison_policy": "fixed_parameters_equal_log_weight_ensemble_no_target_year_tuning",
+      "catboost_top_feature_importance": [
+        {
+          "feature": "Gr Liv Area",
+          "importance_percent": "19.5552"
+        },
+        {
+          "feature": "Overall Qual",
+          "importance_percent": "16.5693"
+        },
+        {
+          "feature": "Total Bsmt SF",
+          "importance_percent": "6.0636"
+        },
+        {
+          "feature": "1st Flr SF",
+          "importance_percent": "4.4755"
+        },
+        {
+          "feature": "Year Built",
+          "importance_percent": "4.1425"
+        },
+        {
+          "feature": "Full Bath",
+          "importance_percent": "3.7226"
+        },
+        {
+          "feature": "Lot Area",
+          "importance_percent": "3.6979"
+        },
+        {
+          "feature": "Garage Area",
+          "importance_percent": "2.9085"
+        },
+        {
+          "feature": "Fireplace Qu",
+          "importance_percent": "2.9018"
+        },
+        {
+          "feature": "BsmtFin SF 1",
+          "importance_percent": "2.8105"
+        },
+        {
+          "feature": "Overall Cond",
+          "importance_percent": "2.7173"
+        },
+        {
+          "feature": "Year Remod/Add",
+          "importance_percent": "2.5381"
+        },
+        {
+          "feature": "Garage Cars",
+          "importance_percent": "2.4906"
+        },
+        {
+          "feature": "Kitchen Qual",
+          "importance_percent": "2.4638"
+        },
+        {
+          "feature": "Garage Yr Blt",
+          "importance_percent": "2.3671"
+        }
+      ],
+      "quality_segments": {
+        "3": {
+          "count": 4,
+          "mean_absolute_error_dollars": "7422.3000",
+          "median_absolute_percentage_error": "8.2121",
+          "mean_absolute_percentage_error": "9.0132",
+          "mean_signed_percentage_error": "8.2325",
+          "within_10_percent": 2,
+          "worst_absolute_percentage_error": "18.0672",
+          "error_grade_counts": {
+            "A": 1,
+            "B": 1,
+            "C": 1,
+            "D": 1,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 3,
+          "residual_band_empirical_coverage_percent": "75.0000"
+        },
+        "4": {
+          "count": 16,
+          "mean_absolute_error_dollars": "8722.6219",
+          "median_absolute_percentage_error": "6.3133",
+          "mean_absolute_percentage_error": "7.6204",
+          "mean_signed_percentage_error": "-5.0555",
+          "within_10_percent": 14,
+          "worst_absolute_percentage_error": "21.5101",
+          "error_grade_counts": {
+            "A": 6,
+            "B": 8,
+            "C": 0,
+            "D": 1,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 14,
+          "residual_band_empirical_coverage_percent": "87.5000"
+        },
+        "5": {
+          "count": 72,
+          "mean_absolute_error_dollars": "9047.0407",
+          "median_absolute_percentage_error": "4.2141",
+          "mean_absolute_percentage_error": "6.8293",
+          "mean_signed_percentage_error": "1.1305",
+          "within_10_percent": 57,
+          "worst_absolute_percentage_error": "39.5918",
+          "error_grade_counts": {
+            "A": 42,
+            "B": 15,
+            "C": 8,
+            "D": 2,
+            "F": 5
+          },
+          "calibrated_residual_band_contains_sale": 64,
+          "residual_band_empirical_coverage_percent": "88.8889"
+        },
+        "6": {
+          "count": 61,
+          "mean_absolute_error_dollars": "11025.9080",
+          "median_absolute_percentage_error": "5.5203",
+          "mean_absolute_percentage_error": "6.4964",
+          "mean_signed_percentage_error": "-0.7554",
+          "within_10_percent": 50,
+          "worst_absolute_percentage_error": "38.9279",
+          "error_grade_counts": {
+            "A": 27,
+            "B": 23,
+            "C": 9,
+            "D": 1,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 57,
+          "residual_band_empirical_coverage_percent": "93.4426"
+        },
+        "7": {
+          "count": 47,
+          "mean_absolute_error_dollars": "14269.1706",
+          "median_absolute_percentage_error": "5.1259",
+          "mean_absolute_percentage_error": "6.2632",
+          "mean_signed_percentage_error": "-0.8031",
+          "within_10_percent": 40,
+          "worst_absolute_percentage_error": "36.2777",
+          "error_grade_counts": {
+            "A": 22,
+            "B": 18,
+            "C": 3,
+            "D": 3,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 42,
+          "residual_band_empirical_coverage_percent": "89.3617"
+        },
+        "8": {
+          "count": 22,
+          "mean_absolute_error_dollars": "19651.8609",
+          "median_absolute_percentage_error": "4.3308",
+          "mean_absolute_percentage_error": "7.1057",
+          "mean_signed_percentage_error": "-0.7046",
+          "within_10_percent": 17,
+          "worst_absolute_percentage_error": "29.7184",
+          "error_grade_counts": {
+            "A": 13,
+            "B": 4,
+            "C": 2,
+            "D": 2,
+            "F": 1
+          },
+          "calibrated_residual_band_contains_sale": 19,
+          "residual_band_empirical_coverage_percent": "86.3636"
+        },
+        "9": {
+          "count": 4,
+          "mean_absolute_error_dollars": "23829.2225",
+          "median_absolute_percentage_error": "6.2760",
+          "mean_absolute_percentage_error": "6.1751",
+          "mean_signed_percentage_error": "0.7967",
+          "within_10_percent": 4,
+          "worst_absolute_percentage_error": "8.0509",
+          "error_grade_counts": {
+            "A": 1,
+            "B": 3,
+            "C": 0,
+            "D": 0,
+            "F": 0
+          },
+          "calibrated_residual_band_contains_sale": 4,
+          "residual_band_empirical_coverage_percent": "100.0000"
+        }
+      },
+      "identical_target_comparison": {
+        "old_unadjusted_shortlist": {
+          "count": 215,
+          "mean_absolute_error_dollars": "22881.3618",
+          "median_absolute_percentage_error": "9.8563",
+          "mean_absolute_percentage_error": "13.2455",
+          "mean_signed_percentage_error": "0.3703",
+          "within_10_percent": 110,
+          "worst_absolute_percentage_error": "131.5722",
+          "observed_comp_span_contains_sale": 133,
+          "error_grade_counts": {
+            "A": 62,
+            "B": 48,
+            "C": 37,
+            "D": 20,
+            "F": 48
+          }
+        },
+        "new_research_ensemble": {
+          "count": 215,
+          "mean_absolute_error_dollars": "11580.4955",
+          "median_absolute_percentage_error": "4.8372",
+          "mean_absolute_percentage_error": "6.6517",
+          "mean_signed_percentage_error": "-0.1230",
+          "within_10_percent": 176,
+          "worst_absolute_percentage_error": "39.5918",
+          "error_grade_counts": {
+            "A": 109,
+            "B": 67,
+            "C": 21,
+            "D": 10,
+            "F": 8
+          },
+          "calibrated_residual_band_contains_sale": 193,
+          "residual_band_empirical_coverage_percent": "89.7674"
+        }
+      }
+    }
+  },
+  "aggregate": {
+    "ridge": {
+      "count": 1124,
+      "mean_absolute_error_dollars": "11952.7714",
+      "median_absolute_percentage_error": "5.2722",
+      "mean_absolute_percentage_error": "7.0406",
+      "mean_signed_percentage_error": "1.4182",
+      "within_10_percent": 882,
+      "worst_absolute_percentage_error": "150.6031",
+      "error_grade_counts": {
+        "A": 529,
+        "B": 353,
+        "C": 144,
+        "D": 50,
+        "F": 48
+      },
+      "calibrated_residual_band_contains_sale": 1010,
+      "residual_band_empirical_coverage_percent": "89.8577"
+    },
+    "lightgbm": {
+      "count": 1124,
+      "mean_absolute_error_dollars": "12897.0673",
+      "median_absolute_percentage_error": "5.0370",
+      "mean_absolute_percentage_error": "7.3677",
+      "mean_signed_percentage_error": "1.1660",
+      "within_10_percent": 858,
+      "worst_absolute_percentage_error": "117.7501",
+      "error_grade_counts": {
+        "A": 557,
+        "B": 301,
+        "C": 142,
+        "D": 58,
+        "F": 66
+      },
+      "calibrated_residual_band_contains_sale": 1011,
+      "residual_band_empirical_coverage_percent": "89.9466"
+    },
+    "catboost": {
+      "count": 1124,
+      "mean_absolute_error_dollars": "12291.0757",
+      "median_absolute_percentage_error": "5.1199",
+      "mean_absolute_percentage_error": "7.1145",
+      "mean_signed_percentage_error": "1.3073",
+      "within_10_percent": 875,
+      "worst_absolute_percentage_error": "113.8899",
+      "error_grade_counts": {
+        "A": 557,
+        "B": 318,
+        "C": 125,
+        "D": 59,
+        "F": 65
+      },
+      "calibrated_residual_band_contains_sale": 1002,
+      "residual_band_empirical_coverage_percent": "89.1459"
+    },
+    "ensemble": {
+      "count": 1124,
+      "mean_absolute_error_dollars": "11246.6122",
+      "median_absolute_percentage_error": "4.5290",
+      "mean_absolute_percentage_error": "6.6020",
+      "mean_signed_percentage_error": "1.2311",
+      "within_10_percent": 904,
+      "worst_absolute_percentage_error": "126.8358",
+      "error_grade_counts": {
+        "A": 598,
+        "B": 306,
+        "C": 123,
+        "D": 46,
+        "F": 51
+      },
+      "calibrated_residual_band_contains_sale": 999,
+      "residual_band_empirical_coverage_percent": "88.8790"
+    }
+  },
+  "review_guard_counts": {
+    "model_disagreement_over_15_percent": 46,
+    "essential_feature_outside_training_support": 64,
+    "unseen_neighborhood": 1
+  },
+  "worst_ensemble_examples": [
+    {
+      "property_id": "0911102170",
+      "source_ref": "jse:row-1556",
+      "sale_price_cents": 4000000,
+      "estimate_cents": 9073434,
+      "low_cents": 7901737,
+      "high_cents": 10418874,
+      "neighborhood": "IDOTRR",
+      "quality": "4"
+    },
+    {
+      "property_id": "0534451170",
+      "source_ref": "jse:row-1221",
+      "sale_price_cents": 5200000,
+      "estimate_cents": 7619850,
+      "low_cents": 6635862,
+      "high_cents": 8749747,
+      "neighborhood": "BrkSide",
+      "quality": "3"
+    },
+    {
+      "property_id": "0911226030",
+      "source_ref": "jse:row-1559",
+      "sale_price_cents": 6500000,
+      "estimate_cents": 8784755,
+      "low_cents": 7650337,
+      "high_cents": 10087388,
+      "neighborhood": "IDOTRR",
+      "quality": "4"
+    },
+    {
+      "property_id": "0902330010",
+      "source_ref": "jse:row-1319",
+      "sale_price_cents": 12200000,
+      "estimate_cents": 16076845,
+      "low_cents": 14000764,
+      "high_cents": 18460774,
+      "neighborhood": "OldTown",
+      "quality": "8"
+    },
+    {
+      "property_id": "0905426030",
+      "source_ref": "jse:row-1408",
+      "sale_price_cents": 26000000,
+      "estimate_cents": 17856262,
+      "low_cents": 15550396,
+      "high_cents": 20504049,
+      "neighborhood": "Edwards",
+      "quality": "5"
+    },
+    {
+      "property_id": "0532378120",
+      "source_ref": "jse:row-562",
+      "sale_price_cents": 6238300,
+      "estimate_cents": 12609271,
+      "low_cents": 11162873,
+      "high_cents": 14243082,
+      "neighborhood": "Sawyer",
+      "quality": "5"
+    },
+    {
+      "property_id": "0908275110",
+      "source_ref": "jse:row-901",
+      "sale_price_cents": 10350000,
+      "estimate_cents": 14605605,
+      "low_cents": 12930209,
+      "high_cents": 16498085,
+      "neighborhood": "Edwards",
+      "quality": "5"
+    },
+    {
+      "property_id": "0904351240",
+      "source_ref": "jse:row-768",
+      "sale_price_cents": 6300000,
+      "estimate_cents": 8848677,
+      "low_cents": 7833653,
+      "high_cents": 9995220,
+      "neighborhood": "Edwards",
+      "quality": "5"
+    },
+    {
+      "property_id": "0905377130",
+      "source_ref": "jse:row-785",
+      "sale_price_cents": 8250000,
+      "estimate_cents": 10928309,
+      "low_cents": 9674733,
+      "high_cents": 12344314,
+      "neighborhood": "Edwards",
+      "quality": "4"
+    },
+    {
+      "property_id": "0902205010",
+      "source_ref": "jse:row-709",
+      "sale_price_cents": 4500000,
+      "estimate_cents": 5885464,
+      "low_cents": 5210348,
+      "high_cents": 6648057,
+      "neighborhood": "OldTown",
+      "quality": "2"
+    },
+    {
+      "property_id": "0905103060",
+      "source_ref": "jse:row-220",
+      "sale_price_cents": 12150000,
+      "estimate_cents": 16960399,
+      "low_cents": 14788859,
+      "high_cents": 19450800,
+      "neighborhood": "Sawyer",
+      "quality": "5"
+    },
+    {
+      "property_id": "0533352170",
+      "source_ref": "jse:row-109",
+      "sale_price_cents": 13050000,
+      "estimate_cents": 18130087,
+      "low_cents": 15808785,
+      "high_cents": 20792240,
+      "neighborhood": "Sawyer",
+      "quality": "6"
+    },
+    {
+      "property_id": "0535125010",
+      "source_ref": "jse:row-137",
+      "sale_price_cents": 18000000,
+      "estimate_cents": 24529981,
+      "low_cents": 21389263,
+      "high_cents": 28131870,
+      "neighborhood": "NAmes",
+      "quality": "7"
+    },
+    {
+      "property_id": "0531477050",
+      "source_ref": "jse:row-83",
+      "sale_price_cents": 6750000,
+      "estimate_cents": 9075379,
+      "low_cents": 7913405,
+      "high_cents": 10407973,
+      "neighborhood": "SawyerW",
+      "quality": "5"
+    },
+    {
+      "property_id": "0527225035",
+      "source_ref": "jse:row-17",
+      "sale_price_cents": 16400000,
+      "estimate_cents": 21273825,
+      "low_cents": 18550012,
+      "high_cents": 24397593,
+      "neighborhood": "Gilbert",
+      "quality": "8"
+    }
+  ],
+  "features": [
+    "Lot Frontage",
+    "Lot Area",
+    "Overall Qual",
+    "Overall Cond",
+    "Year Built",
+    "Year Remod/Add",
+    "Mas Vnr Area",
+    "BsmtFin SF 1",
+    "BsmtFin SF 2",
+    "Bsmt Unf SF",
+    "Total Bsmt SF",
+    "1st Flr SF",
+    "2nd Flr SF",
+    "Low Qual Fin SF",
+    "Gr Liv Area",
+    "Bsmt Full Bath",
+    "Bsmt Half Bath",
+    "Full Bath",
+    "Half Bath",
+    "Bedroom AbvGr",
+    "Kitchen AbvGr",
+    "TotRms AbvGrd",
+    "Fireplaces",
+    "Garage Yr Blt",
+    "Garage Cars",
+    "Garage Area",
+    "Wood Deck SF",
+    "Open Porch SF",
+    "Enclosed Porch",
+    "3Ssn Porch",
+    "Screen Porch",
+    "Pool Area",
+    "MS SubClass",
+    "MS Zoning",
+    "Street",
+    "Alley",
+    "Lot Shape",
+    "Land Contour",
+    "Utilities",
+    "Lot Config",
+    "Land Slope",
+    "Neighborhood",
+    "Condition 1",
+    "Condition 2",
+    "Bldg Type",
+    "House Style",
+    "Roof Style",
+    "Roof Matl",
+    "Exterior 1st",
+    "Exterior 2nd",
+    "Mas Vnr Type",
+    "Exter Qual",
+    "Exter Cond",
+    "Foundation",
+    "Bsmt Qual",
+    "Bsmt Cond",
+    "Bsmt Exposure",
+    "BsmtFin Type 1",
+    "BsmtFin Type 2",
+    "Heating",
+    "Heating QC",
+    "Central Air",
+    "Electrical",
+    "Kitchen Qual",
+    "Functional",
+    "Fireplace Qu",
+    "Garage Type",
+    "Garage Finish",
+    "Garage Qual",
+    "Garage Cond",
+    "Paved Drive",
+    "Pool QC",
+    "Fence",
+    "Misc Feature"
+  ],
+  "dependencies": {
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.8.0",
+    "catboost": "1.2.8",
+    "lightgbm": "4.6.0",
+    "scipy": "1.18.1"
+  },
+  "seed": 3342,
+  "elapsed_seconds": "37.15",
+  "limitations": [
+    "Original assessor dataset is retrospective and retains only latest sale per parcel; as-of characteristic versions and publication times are unknown",
+    "Month-end closing and 30-day availability lag are assumptions, not historical source attestations",
+    "2010 was previously examined in the earlier benchmark; this is a repeat benchmark, not a newly sealed independent test",
+    "Every target parcel and label is excluded from fitting and calibration for its year; preprocessing fits only fitting records",
+    "Fixed model settings and equal log ensemble weights; no test-year early stopping or target-price-based comp selection",
+    "Calibration uses a disjoint most recent 15% of earlier records and the finite-sample 90% residual quantile; temporal exchangeability is not established",
+    "Empirical band coverage is measured honestly and may miss its nominal 90%; no guaranteed coverage claim",
+    "Numeric evaluations retain all target failures, including predictions withheld by research review guards",
+    "No sale-price-driven target exclusions, no protected-class or crime inputs, and no seller asking-price predictor",
+    "Floating point is confined to model fitting and log prediction; monetary outputs are bounded integer cents",
+    "Research reports cannot become ready_advisory, grant offers or quote prices; no automatic Sophia integration",
+    "Current California valuation, live data freshness, independent source verification and completed-renovation ARV accuracy remain untested"
+  ],
+  "quote_authorized": false,
+  "offer_authorized": false,
+  "production_ready": false
+}
