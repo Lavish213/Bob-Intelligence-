@@ -40,7 +40,7 @@ Addressed means implemented and tested, not deployed or production certified.
 | BOB-034 | P2 | Addressed | Unpinned dependencies and unused scheduler |
 | BOB-035 | P2 | Addressed | No graceful worker shutdown |
 | BOB-036 | P1 | Partial | Operational alerting and real infrastructure unverified |
-| BOB-037 | P2 | Partial | Reviewed-input sales comparison and investment math implemented; randomized checks and historical unadjusted-price diagnostics added; independent live-source enrichment, local adjusted-valuation backtesting and autonomous underwriting remain absent |
+| BOB-037 | P2 | Partial | Reviewed-input sales comparison and investment math implemented; randomized checks, historical diagnostics and optional richer hedonic research added; independent live-source enrichment, newly sealed local valuation/ARV acceptance and autonomous underwriting remain absent |
 | BOB-038 | P1 | Addressed | Actual intel assembly mixed cents and dollars in conflict checks |
 | BOB-039 | P1 | Addressed | Unrelated speech refreshed old verified facts |
 | BOB-040 | P1 | Addressed | Spoken address rebound canonical property |
