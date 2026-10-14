@@ -4,16 +4,19 @@ from pathlib import Path
 import sys
 
 from backend.valuation.engine import compare_sales
+from backend.valuation.candidates import rank_candidates
 
 
 def main():
     parser = argparse.ArgumentParser(description='Calculate an advisory valuation from reviewed comparable-sale evidence.')
     parser.add_argument('input_json', type=Path)
+    parser.add_argument('--rank-candidates', action='store_true', help='Shortlist candidates for review without calculating a price.')
     args = parser.parse_args()
     try:
         if args.input_json.stat().st_size > 2000000:
             raise ValueError('Input budget exceeded')
-        result = compare_sales(json.loads(args.input_json.read_text()))
+        payload = json.loads(args.input_json.read_text())
+        result = rank_candidates(payload['subject'], payload['comparables'], payload['as_of']) if args.rank_candidates else compare_sales(payload)
     except (OSError, ValueError, TypeError, KeyError, RecursionError):
         json.dump({'status': 'invalid_input', 'quote_authorized': False, 'offer_authorized': False}, sys.stdout)
         sys.stdout.write('\n')

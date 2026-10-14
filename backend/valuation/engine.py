@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
+from fractions import Fraction
 import re
 
 
@@ -34,6 +35,24 @@ def day(value):
 
 def cents(value):
     return int(value.quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+
+
+def reconcile_indications(indications, subject_area_sqft):
+    area = integer(subject_area_sqft, 1, 100000)
+    if not isinstance(indications, list) or not 1 <= len(indications) <= 50:
+        raise ValueError('Bounded indications are required')
+    weights = []
+    prices = []
+    for row in indications:
+        prices.append(integer(row['adjusted_value_cents'], 1))
+        age = integer(row['age_days'], 0, 730)
+        distance = integer(row['distance_meters'], 0, 1000000)
+        comp_area = integer(row['living_area_sqft'], 1, 100000)
+        weights.append(1 / (1 + Fraction(age, 180) + Fraction(distance, 2000) + Fraction(abs(area - comp_area), area)))
+    exact = sum(price * weight for price, weight in zip(prices, weights)) / sum(weights)
+    point = (2 * exact.numerator + exact.denominator) // (2 * exact.denominator)
+    displayed_weights = [str((Decimal(w.numerator) / w.denominator).quantize(Decimal('0.000001'))) for w in weights]
+    return {'point_cents': point, 'weights': displayed_weights}
 
 
 def validate_features(features):
@@ -140,15 +159,13 @@ def compare_sales(request, today=None):
             gross_bps = int(Decimal(gross) * 10000 / price)
             if gross * 10000 > max_gross * price:
                 review_reasons.add('large_gross_adjustments')
-            area_gap = Decimal(abs(subject['features']['living_area_sqft'] - comp['features']['living_area_sqft'])) / subject['features']['living_area_sqft']
-            weight = Decimal(1) / (1 + Decimal(age) / 180 + Decimal(distance) / 2000 + area_gap)
-            accepted.append({'property_id': property_id, 'sale_id': sale_id, 'source_ref': source, 'comparison_review_ref': comparison_review, 'closed_on': sold.isoformat(), 'contract_on': contracted.isoformat(), 'available_on': available.isoformat(), 'sale_price_cents': price, 'adjustments': audited, 'net_adjustment_cents': net, 'gross_adjustment_cents': gross, 'gross_adjustment_bps': gross_bps, 'adjusted_value_cents': adjusted, 'sale_price_per_sqft_cents': cents(Decimal(price) / comp['features']['living_area_sqft']), 'weight': weight})
+            accepted.append({'property_id': property_id, 'sale_id': sale_id, 'source_ref': source, 'comparison_review_ref': comparison_review, 'closed_on': sold.isoformat(), 'contract_on': contracted.isoformat(), 'available_on': available.isoformat(), 'sale_price_cents': price, 'adjustments': audited, 'net_adjustment_cents': net, 'gross_adjustment_cents': gross, 'gross_adjustment_bps': gross_bps, 'adjusted_value_cents': adjusted, 'sale_price_per_sqft_cents': cents(Decimal(price) / comp['features']['living_area_sqft']), 'age_days': age, 'distance_meters': distance, 'living_area_sqft': comp['features']['living_area_sqft']})
         except (KeyError, TypeError, ValueError, ArithmeticError):
             rejected.append({'input_index': index, 'reason': 'malformed_or_unsupported_evidence'})
     point, low, high, spread_bps = None, None, None, None
+    reconciliation = reconcile_indications(accepted, subject['features']['living_area_sqft']) if accepted else None
     if len(accepted) >= 3:
-        total_weight = sum(c['weight'] for c in accepted)
-        estimate = cents(sum(Decimal(c['adjusted_value_cents']) * c['weight'] for c in accepted) / total_weight)
+        estimate = reconciliation['point_cents']
         lower = min(c['adjusted_value_cents'] for c in accepted)
         upper = max(c['adjusted_value_cents'] for c in accepted)
         spread_bps = int(Decimal(upper - lower) * 10000 / estimate)
@@ -156,8 +173,9 @@ def compare_sales(request, today=None):
             review_reasons.add('wide_adjusted_sale_dispersion')
         if not review_reasons:
             point, low, high = estimate, lower, upper
-    for comp in accepted:
-        comp['weight'] = str(comp['weight'].quantize(Decimal('0.000001')))
+    if accepted:
+        for comp, weight in zip(accepted, reconciliation['weights']):
+            comp['weight'] = weight
     status = 'needs_data' if len(accepted) < 3 else 'needs_review' if review_reasons else 'ready_advisory'
     return {'schema_version': '1.0', 'method': 'evidence_adjusted_sales_comparison', 'purpose': purpose, 'subject_id': subject_id, 'as_of': as_of.isoformat(), 'status': status, 'point_cents': point, 'supported_low_cents': low, 'supported_high_cents': high, 'range_meaning': 'observed_adjusted_sale_span_not_statistical_confidence_interval', 'spread_bps': spread_bps, 'comparable_count': len(accepted), 'accepted_comparables': sorted(accepted, key=lambda c: c['sale_id']), 'rejected_comparables': rejected, 'review_reasons': sorted(review_reasons), 'quote_authorized': False, 'offer_authorized': False, 'evidence_verification': 'trusted_input_attestations_not_independent_source_research'}
 
