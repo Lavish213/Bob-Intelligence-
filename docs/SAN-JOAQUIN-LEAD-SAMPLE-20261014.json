@@ -1,0 +1,167 @@
+{
+  "retrieved_on": "2026-10-14",
+  "status": "public_record_candidates_only",
+  "source_notice": "https://www.sanjoaquin.gov/department/ttc/tax/general-tax/announcements",
+  "notice_default_on": "2025-07-01",
+  "notice_amount_vintage": "2026-09",
+  "sampling": "first 15 notice entries; not random; no owner names or contacts retained",
+  "current_delinquency_verified": false,
+  "parcel_service": "https://sjmap.org/server/rest/services/Apps/DistrictViewerSvc/MapServer/10/query",
+  "returned_parcels": 15,
+  "candidates": [
+    {
+      "APN": "25230071",
+      "SITUSCITYNAME": "TRACY",
+      "TOTALLIV_AREA": 3101,
+      "YEAR_BUILT": "2004",
+      "BEDROOMS": 5,
+      "BATHROOM_WHOLE": 3,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    },
+    {
+      "APN": "23510002",
+      "SITUSCITYNAME": "TRACY",
+      "TOTALLIV_AREA": 1040,
+      "YEAR_BUILT": "1954",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 1,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    },
+    {
+      "APN": "23914003",
+      "SITUSCITYNAME": "TRACY",
+      "TOTALLIV_AREA": null,
+      "YEAR_BUILT": null,
+      "BEDROOMS": null,
+      "BATHROOM_WHOLE": null,
+      "BATHROOM_HALF": null,
+      "USECODE": "690"
+    },
+    {
+      "APN": "23908055",
+      "SITUSCITYNAME": "TRACY",
+      "TOTALLIV_AREA": 1440,
+      "YEAR_BUILT": "1987",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 2,
+      "BATHROOM_HALF": 0,
+      "USECODE": "56"
+    },
+    {
+      "APN": "21918013",
+      "SITUSCITYNAME": "MANTECA",
+      "TOTALLIV_AREA": 1094,
+      "YEAR_BUILT": "1922",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 1,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    },
+    {
+      "APN": "19154059",
+      "SITUSCITYNAME": "LATHROP",
+      "TOTALLIV_AREA": 2921,
+      "YEAR_BUILT": "2006",
+      "BEDROOMS": 5,
+      "BATHROOM_WHOLE": 3,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    },
+    {
+      "APN": "17909004",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": null,
+      "YEAR_BUILT": null,
+      "BEDROOMS": 0,
+      "BATHROOM_WHOLE": 0,
+      "BATHROOM_HALF": 0,
+      "USECODE": "302"
+    },
+    {
+      "APN": "15513007",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": null,
+      "YEAR_BUILT": null,
+      "BEDROOMS": 0,
+      "BATHROOM_WHOLE": 0,
+      "BATHROOM_HALF": 0,
+      "USECODE": "1A"
+    },
+    {
+      "APN": "14123310",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": 1287,
+      "YEAR_BUILT": "1956",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 2,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    },
+    {
+      "APN": "11222039",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": 5000,
+      "YEAR_BUILT": "1983",
+      "BEDROOMS": 0,
+      "BATHROOM_WHOLE": 0,
+      "BATHROOM_HALF": 0,
+      "USECODE": "170"
+    },
+    {
+      "APN": "11208006",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": 1776,
+      "YEAR_BUILT": "1979",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 2,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    },
+    {
+      "APN": "09760002",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": 20162,
+      "YEAR_BUILT": "1976",
+      "BEDROOMS": 0,
+      "BATHROOM_WHOLE": 0,
+      "BATHROOM_HALF": 0,
+      "USECODE": "61"
+    },
+    {
+      "APN": "10010022",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": 1516,
+      "YEAR_BUILT": "1974",
+      "BEDROOMS": 2,
+      "BATHROOM_WHOLE": 2,
+      "BATHROOM_HALF": 1,
+      "USECODE": "12"
+    },
+    {
+      "APN": "09430037",
+      "SITUSCITYNAME": "STOCKTON",
+      "TOTALLIV_AREA": 1678,
+      "YEAR_BUILT": "1989",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 2,
+      "BATHROOM_HALF": 1,
+      "USECODE": "10"
+    },
+    {
+      "APN": "03512305",
+      "SITUSCITYNAME": "LODI",
+      "TOTALLIV_AREA": 1104,
+      "YEAR_BUILT": "1962",
+      "BEDROOMS": 3,
+      "BATHROOM_WHOLE": 2,
+      "BATHROOM_HALF": 0,
+      "USECODE": "10"
+    }
+  ],
+  "arv_cents": null,
+  "offer_cents": null,
+  "closed_comps_acquired": 0,
+  "limitations": "Not all residential houses; current ownership, redemption, condition, transaction comps and contact authority require verification."
+}
