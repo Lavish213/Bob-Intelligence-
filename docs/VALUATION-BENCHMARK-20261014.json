@@ -1,0 +1,957 @@
+{
+  "schema_version": "1.0",
+  "dataset": {
+    "source_url": "https://jse.amstat.org/v19n3/decock/AmesHousing.txt",
+    "sha256": "6cfe6cb525ba437de428653a1040e2aed7d696640bf75203786a6d7a0e67cfcc",
+    "rows": 2930,
+    "retained": 1943,
+    "exclusions": {
+      "not_detached_single_family": 505,
+      "not_normal_warranty_deed_sale": 482
+    }
+  },
+  "scope": "offline_as_is_numerical_diagnostic_not_production_appraisal_or_arv_backtest",
+  "error_grade_policy": "Project diagnostic only: A <=5%, B <=10%, C <=15%, D <=20%, F >20% absolute sale-price error",
+  "assumptions": [
+    "Month-only sales assigned month-end; targets scored at start of their sale month",
+    "Assumed publication lag of 30 days; historical publication times are not known",
+    "Subject sale price is hidden from candidate ranking and numerical estimation, then revealed for scoring",
+    "No subject sale, same-month sale, or later sale used as a comp",
+    "Same neighborhood, prior 365 days, no demographic variables",
+    "Geographic distance unavailable and omitted from numerical weights",
+    "No market-time, concession, condition, or other dollar adjustments invented",
+    "No source verification, inspection, or comparison review attested; strict Bob withholds all prices",
+    "2009 is development diagnostic; ranking frozen before 2010 evaluation",
+    "Both methods scored on identical subjects with equal comp counts; random method repeated across fixed seeds",
+    "Historical dataset retains only latest sale per parcel and is not an as-of records archive",
+    "Observed comp-price span is not a calibrated confidence interval",
+    "Single old Iowa market does not establish current California or after-repair accuracy"
+  ],
+  "summaries": {
+    "2009": {
+      "target_count": 466,
+      "eligible_subjects_common_to_methods": 434,
+      "candidate_shortfalls": 32,
+      "strict_bob_advisory_prices": 0,
+      "random_same_neighborhood": {
+        "count": 8680,
+        "mean_absolute_error_dollars": "34630.2157",
+        "median_absolute_percentage_error": "14.3747",
+        "mean_absolute_percentage_error": "19.3185",
+        "mean_signed_percentage_error": "5.6768",
+        "within_10_percent": 3293,
+        "worst_absolute_percentage_error": "200.4479",
+        "observed_comp_span_contains_sale": 5733,
+        "error_grade_counts": {
+          "A": 1704,
+          "B": 1589,
+          "C": 1199,
+          "D": 1020,
+          "F": 3168
+        }
+      },
+      "feature_ranked": {
+        "count": 434,
+        "mean_absolute_error_dollars": "22177.7886",
+        "median_absolute_percentage_error": "8.5796",
+        "mean_absolute_percentage_error": "11.6739",
+        "mean_signed_percentage_error": "0.8239",
+        "within_10_percent": 256,
+        "worst_absolute_percentage_error": "103.8670",
+        "observed_comp_span_contains_sale": 303,
+        "error_grade_counts": {
+          "A": 139,
+          "B": 117,
+          "C": 70,
+          "D": 44,
+          "F": 64
+        }
+      },
+      "random_per_seed": {
+        "0": {
+          "count": 434,
+          "mean_absolute_error_dollars": "36107.2549",
+          "median_absolute_percentage_error": "15.5428",
+          "mean_absolute_percentage_error": "19.9056",
+          "mean_signed_percentage_error": "5.4606",
+          "within_10_percent": 138,
+          "worst_absolute_percentage_error": "135.8968",
+          "observed_comp_span_contains_sale": 295,
+          "error_grade_counts": {
+            "A": 82,
+            "B": 56,
+            "C": 65,
+            "D": 59,
+            "F": 172
+          }
+        },
+        "1": {
+          "count": 434,
+          "mean_absolute_error_dollars": "33843.6033",
+          "median_absolute_percentage_error": "14.8851",
+          "mean_absolute_percentage_error": "18.7526",
+          "mean_signed_percentage_error": "4.9791",
+          "within_10_percent": 167,
+          "worst_absolute_percentage_error": "170.6978",
+          "observed_comp_span_contains_sale": 295,
+          "error_grade_counts": {
+            "A": 79,
+            "B": 88,
+            "C": 52,
+            "D": 71,
+            "F": 144
+          }
+        },
+        "2": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34374.2686",
+          "median_absolute_percentage_error": "14.3752",
+          "mean_absolute_percentage_error": "19.3475",
+          "mean_signed_percentage_error": "6.2192",
+          "within_10_percent": 173,
+          "worst_absolute_percentage_error": "200.4479",
+          "observed_comp_span_contains_sale": 282,
+          "error_grade_counts": {
+            "A": 101,
+            "B": 72,
+            "C": 49,
+            "D": 49,
+            "F": 163
+          }
+        },
+        "3": {
+          "count": 434,
+          "mean_absolute_error_dollars": "33383.0202",
+          "median_absolute_percentage_error": "14.1018",
+          "mean_absolute_percentage_error": "18.9868",
+          "mean_signed_percentage_error": "5.2770",
+          "within_10_percent": 165,
+          "worst_absolute_percentage_error": "173.6176",
+          "observed_comp_span_contains_sale": 298,
+          "error_grade_counts": {
+            "A": 92,
+            "B": 73,
+            "C": 62,
+            "D": 43,
+            "F": 164
+          }
+        },
+        "4": {
+          "count": 434,
+          "mean_absolute_error_dollars": "35694.2136",
+          "median_absolute_percentage_error": "14.7617",
+          "mean_absolute_percentage_error": "19.7591",
+          "mean_signed_percentage_error": "5.7001",
+          "within_10_percent": 164,
+          "worst_absolute_percentage_error": "143.5730",
+          "observed_comp_span_contains_sale": 281,
+          "error_grade_counts": {
+            "A": 74,
+            "B": 90,
+            "C": 56,
+            "D": 53,
+            "F": 161
+          }
+        },
+        "5": {
+          "count": 434,
+          "mean_absolute_error_dollars": "35476.8964",
+          "median_absolute_percentage_error": "13.7233",
+          "mean_absolute_percentage_error": "19.8644",
+          "mean_signed_percentage_error": "5.8455",
+          "within_10_percent": 165,
+          "worst_absolute_percentage_error": "126.7578",
+          "observed_comp_span_contains_sale": 282,
+          "error_grade_counts": {
+            "A": 84,
+            "B": 81,
+            "C": 68,
+            "D": 36,
+            "F": 165
+          }
+        },
+        "6": {
+          "count": 434,
+          "mean_absolute_error_dollars": "33834.3904",
+          "median_absolute_percentage_error": "13.4453",
+          "mean_absolute_percentage_error": "18.6438",
+          "mean_signed_percentage_error": "5.6542",
+          "within_10_percent": 169,
+          "worst_absolute_percentage_error": "128.1090",
+          "observed_comp_span_contains_sale": 290,
+          "error_grade_counts": {
+            "A": 77,
+            "B": 92,
+            "C": 65,
+            "D": 47,
+            "F": 153
+          }
+        },
+        "7": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34007.5644",
+          "median_absolute_percentage_error": "12.8981",
+          "mean_absolute_percentage_error": "18.7950",
+          "mean_signed_percentage_error": "5.3086",
+          "within_10_percent": 169,
+          "worst_absolute_percentage_error": "167.8413",
+          "observed_comp_span_contains_sale": 288,
+          "error_grade_counts": {
+            "A": 87,
+            "B": 82,
+            "C": 70,
+            "D": 41,
+            "F": 154
+          }
+        },
+        "8": {
+          "count": 434,
+          "mean_absolute_error_dollars": "35469.6477",
+          "median_absolute_percentage_error": "15.2582",
+          "mean_absolute_percentage_error": "19.9247",
+          "mean_signed_percentage_error": "6.2617",
+          "within_10_percent": 161,
+          "worst_absolute_percentage_error": "135.9917",
+          "observed_comp_span_contains_sale": 274,
+          "error_grade_counts": {
+            "A": 80,
+            "B": 81,
+            "C": 51,
+            "D": 63,
+            "F": 159
+          }
+        },
+        "9": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34863.0010",
+          "median_absolute_percentage_error": "14.2351",
+          "mean_absolute_percentage_error": "19.5552",
+          "mean_signed_percentage_error": "6.3595",
+          "within_10_percent": 169,
+          "worst_absolute_percentage_error": "143.8243",
+          "observed_comp_span_contains_sale": 281,
+          "error_grade_counts": {
+            "A": 91,
+            "B": 78,
+            "C": 60,
+            "D": 47,
+            "F": 158
+          }
+        },
+        "10": {
+          "count": 434,
+          "mean_absolute_error_dollars": "35188.3234",
+          "median_absolute_percentage_error": "14.5953",
+          "mean_absolute_percentage_error": "19.9678",
+          "mean_signed_percentage_error": "6.3248",
+          "within_10_percent": 153,
+          "worst_absolute_percentage_error": "155.7018",
+          "observed_comp_span_contains_sale": 282,
+          "error_grade_counts": {
+            "A": 82,
+            "B": 71,
+            "C": 69,
+            "D": 56,
+            "F": 156
+          }
+        },
+        "11": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34623.6529",
+          "median_absolute_percentage_error": "14.5277",
+          "mean_absolute_percentage_error": "18.8717",
+          "mean_signed_percentage_error": "5.3802",
+          "within_10_percent": 165,
+          "worst_absolute_percentage_error": "136.6380",
+          "observed_comp_span_contains_sale": 290,
+          "error_grade_counts": {
+            "A": 91,
+            "B": 74,
+            "C": 55,
+            "D": 51,
+            "F": 163
+          }
+        },
+        "12": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34361.0045",
+          "median_absolute_percentage_error": "13.8083",
+          "mean_absolute_percentage_error": "19.2124",
+          "mean_signed_percentage_error": "5.2741",
+          "within_10_percent": 173,
+          "worst_absolute_percentage_error": "148.4996",
+          "observed_comp_span_contains_sale": 289,
+          "error_grade_counts": {
+            "A": 78,
+            "B": 95,
+            "C": 55,
+            "D": 54,
+            "F": 152
+          }
+        },
+        "13": {
+          "count": 434,
+          "mean_absolute_error_dollars": "35714.3448",
+          "median_absolute_percentage_error": "14.8636",
+          "mean_absolute_percentage_error": "19.7110",
+          "mean_signed_percentage_error": "6.0787",
+          "within_10_percent": 160,
+          "worst_absolute_percentage_error": "150.4914",
+          "observed_comp_span_contains_sale": 288,
+          "error_grade_counts": {
+            "A": 88,
+            "B": 72,
+            "C": 58,
+            "D": 52,
+            "F": 164
+          }
+        },
+        "14": {
+          "count": 434,
+          "mean_absolute_error_dollars": "35544.7946",
+          "median_absolute_percentage_error": "14.2589",
+          "mean_absolute_percentage_error": "19.9834",
+          "mean_signed_percentage_error": "6.6765",
+          "within_10_percent": 166,
+          "worst_absolute_percentage_error": "129.2799",
+          "observed_comp_span_contains_sale": 287,
+          "error_grade_counts": {
+            "A": 86,
+            "B": 80,
+            "C": 56,
+            "D": 48,
+            "F": 164
+          }
+        },
+        "15": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34712.8465",
+          "median_absolute_percentage_error": "14.7631",
+          "mean_absolute_percentage_error": "19.2776",
+          "mean_signed_percentage_error": "5.1242",
+          "within_10_percent": 163,
+          "worst_absolute_percentage_error": "152.1806",
+          "observed_comp_span_contains_sale": 272,
+          "error_grade_counts": {
+            "A": 98,
+            "B": 65,
+            "C": 59,
+            "D": 48,
+            "F": 164
+          }
+        },
+        "16": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34287.3172",
+          "median_absolute_percentage_error": "13.4678",
+          "mean_absolute_percentage_error": "19.1130",
+          "mean_signed_percentage_error": "5.6580",
+          "within_10_percent": 169,
+          "worst_absolute_percentage_error": "141.5089",
+          "observed_comp_span_contains_sale": 289,
+          "error_grade_counts": {
+            "A": 87,
+            "B": 82,
+            "C": 59,
+            "D": 53,
+            "F": 153
+          }
+        },
+        "17": {
+          "count": 434,
+          "mean_absolute_error_dollars": "34104.2231",
+          "median_absolute_percentage_error": "14.0778",
+          "mean_absolute_percentage_error": "18.9085",
+          "mean_signed_percentage_error": "5.2436",
+          "within_10_percent": 163,
+          "worst_absolute_percentage_error": "119.5766",
+          "observed_comp_span_contains_sale": 297,
+          "error_grade_counts": {
+            "A": 86,
+            "B": 77,
+            "C": 65,
+            "D": 58,
+            "F": 148
+          }
+        },
+        "18": {
+          "count": 434,
+          "mean_absolute_error_dollars": "33623.3226",
+          "median_absolute_percentage_error": "14.0247",
+          "mean_absolute_percentage_error": "19.0517",
+          "mean_signed_percentage_error": "5.1074",
+          "within_10_percent": 167,
+          "worst_absolute_percentage_error": "121.3053",
+          "observed_comp_span_contains_sale": 286,
+          "error_grade_counts": {
+            "A": 71,
+            "B": 96,
+            "C": 60,
+            "D": 45,
+            "F": 162
+          }
+        },
+        "19": {
+          "count": 434,
+          "mean_absolute_error_dollars": "33390.6245",
+          "median_absolute_percentage_error": "13.4191",
+          "mean_absolute_percentage_error": "18.7388",
+          "mean_signed_percentage_error": "5.6037",
+          "within_10_percent": 174,
+          "worst_absolute_percentage_error": "133.8316",
+          "observed_comp_span_contains_sale": 287,
+          "error_grade_counts": {
+            "A": 90,
+            "B": 84,
+            "C": 65,
+            "D": 46,
+            "F": 149
+          }
+        }
+      }
+    },
+    "2010": {
+      "target_count": 226,
+      "eligible_subjects_common_to_methods": 215,
+      "candidate_shortfalls": 11,
+      "strict_bob_advisory_prices": 0,
+      "random_same_neighborhood": {
+        "count": 4300,
+        "mean_absolute_error_dollars": "33602.9259",
+        "median_absolute_percentage_error": "13.6788",
+        "mean_absolute_percentage_error": "19.3427",
+        "mean_signed_percentage_error": "3.1048",
+        "within_10_percent": 1691,
+        "worst_absolute_percentage_error": "209.1293",
+        "observed_comp_span_contains_sale": 2930,
+        "error_grade_counts": {
+          "A": 891,
+          "B": 800,
+          "C": 616,
+          "D": 471,
+          "F": 1522
+        }
+      },
+      "feature_ranked": {
+        "count": 215,
+        "mean_absolute_error_dollars": "22881.3618",
+        "median_absolute_percentage_error": "9.8563",
+        "mean_absolute_percentage_error": "13.2455",
+        "mean_signed_percentage_error": "0.3703",
+        "within_10_percent": 110,
+        "worst_absolute_percentage_error": "131.5722",
+        "observed_comp_span_contains_sale": 133,
+        "error_grade_counts": {
+          "A": 62,
+          "B": 48,
+          "C": 37,
+          "D": 20,
+          "F": 48
+        }
+      },
+      "random_per_seed": {
+        "0": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34547.2622",
+          "median_absolute_percentage_error": "13.5345",
+          "mean_absolute_percentage_error": "19.7017",
+          "mean_signed_percentage_error": "3.4148",
+          "within_10_percent": 80,
+          "worst_absolute_percentage_error": "156.3823",
+          "observed_comp_span_contains_sale": 149,
+          "error_grade_counts": {
+            "A": 43,
+            "B": 37,
+            "C": 36,
+            "D": 19,
+            "F": 80
+          }
+        },
+        "1": {
+          "count": 215,
+          "mean_absolute_error_dollars": "33234.9654",
+          "median_absolute_percentage_error": "13.2937",
+          "mean_absolute_percentage_error": "18.9913",
+          "mean_signed_percentage_error": "2.8280",
+          "within_10_percent": 92,
+          "worst_absolute_percentage_error": "162.7517",
+          "observed_comp_span_contains_sale": 145,
+          "error_grade_counts": {
+            "A": 45,
+            "B": 47,
+            "C": 25,
+            "D": 23,
+            "F": 75
+          }
+        },
+        "2": {
+          "count": 215,
+          "mean_absolute_error_dollars": "32631.6290",
+          "median_absolute_percentage_error": "13.2979",
+          "mean_absolute_percentage_error": "18.5585",
+          "mean_signed_percentage_error": "3.4339",
+          "within_10_percent": 86,
+          "worst_absolute_percentage_error": "202.6853",
+          "observed_comp_span_contains_sale": 156,
+          "error_grade_counts": {
+            "A": 38,
+            "B": 48,
+            "C": 36,
+            "D": 22,
+            "F": 71
+          }
+        },
+        "3": {
+          "count": 215,
+          "mean_absolute_error_dollars": "31748.6819",
+          "median_absolute_percentage_error": "12.5431",
+          "mean_absolute_percentage_error": "18.4885",
+          "mean_signed_percentage_error": "2.4779",
+          "within_10_percent": 85,
+          "worst_absolute_percentage_error": "158.4134",
+          "observed_comp_span_contains_sale": 156,
+          "error_grade_counts": {
+            "A": 45,
+            "B": 40,
+            "C": 37,
+            "D": 18,
+            "F": 75
+          }
+        },
+        "4": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34098.3077",
+          "median_absolute_percentage_error": "13.9251",
+          "mean_absolute_percentage_error": "19.6882",
+          "mean_signed_percentage_error": "4.0751",
+          "within_10_percent": 85,
+          "worst_absolute_percentage_error": "177.8921",
+          "observed_comp_span_contains_sale": 148,
+          "error_grade_counts": {
+            "A": 43,
+            "B": 42,
+            "C": 27,
+            "D": 24,
+            "F": 79
+          }
+        },
+        "5": {
+          "count": 215,
+          "mean_absolute_error_dollars": "32635.1973",
+          "median_absolute_percentage_error": "13.7809",
+          "mean_absolute_percentage_error": "19.0428",
+          "mean_signed_percentage_error": "3.0373",
+          "within_10_percent": 92,
+          "worst_absolute_percentage_error": "171.6472",
+          "observed_comp_span_contains_sale": 143,
+          "error_grade_counts": {
+            "A": 58,
+            "B": 34,
+            "C": 23,
+            "D": 23,
+            "F": 77
+          }
+        },
+        "6": {
+          "count": 215,
+          "mean_absolute_error_dollars": "33971.8138",
+          "median_absolute_percentage_error": "12.1344",
+          "mean_absolute_percentage_error": "19.3852",
+          "mean_signed_percentage_error": "3.0853",
+          "within_10_percent": 92,
+          "worst_absolute_percentage_error": "159.3938",
+          "observed_comp_span_contains_sale": 148,
+          "error_grade_counts": {
+            "A": 35,
+            "B": 57,
+            "C": 33,
+            "D": 14,
+            "F": 76
+          }
+        },
+        "7": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34918.3886",
+          "median_absolute_percentage_error": "15.3024",
+          "mean_absolute_percentage_error": "20.3683",
+          "mean_signed_percentage_error": "3.8923",
+          "within_10_percent": 80,
+          "worst_absolute_percentage_error": "177.3674",
+          "observed_comp_span_contains_sale": 140,
+          "error_grade_counts": {
+            "A": 43,
+            "B": 37,
+            "C": 25,
+            "D": 26,
+            "F": 84
+          }
+        },
+        "8": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34236.6895",
+          "median_absolute_percentage_error": "14.0195",
+          "mean_absolute_percentage_error": "19.7035",
+          "mean_signed_percentage_error": "3.6636",
+          "within_10_percent": 87,
+          "worst_absolute_percentage_error": "179.5086",
+          "observed_comp_span_contains_sale": 141,
+          "error_grade_counts": {
+            "A": 50,
+            "B": 37,
+            "C": 25,
+            "D": 24,
+            "F": 79
+          }
+        },
+        "9": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34870.7413",
+          "median_absolute_percentage_error": "13.3647",
+          "mean_absolute_percentage_error": "20.4169",
+          "mean_signed_percentage_error": "3.5054",
+          "within_10_percent": 80,
+          "worst_absolute_percentage_error": "186.4484",
+          "observed_comp_span_contains_sale": 137,
+          "error_grade_counts": {
+            "A": 38,
+            "B": 42,
+            "C": 34,
+            "D": 25,
+            "F": 76
+          }
+        },
+        "10": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34298.0343",
+          "median_absolute_percentage_error": "14.1463",
+          "mean_absolute_percentage_error": "19.3512",
+          "mean_signed_percentage_error": "1.2110",
+          "within_10_percent": 81,
+          "worst_absolute_percentage_error": "141.7361",
+          "observed_comp_span_contains_sale": 146,
+          "error_grade_counts": {
+            "A": 42,
+            "B": 39,
+            "C": 32,
+            "D": 25,
+            "F": 77
+          }
+        },
+        "11": {
+          "count": 215,
+          "mean_absolute_error_dollars": "33397.7398",
+          "median_absolute_percentage_error": "13.2134",
+          "mean_absolute_percentage_error": "19.3464",
+          "mean_signed_percentage_error": "2.8317",
+          "within_10_percent": 80,
+          "worst_absolute_percentage_error": "199.6556",
+          "observed_comp_span_contains_sale": 139,
+          "error_grade_counts": {
+            "A": 48,
+            "B": 32,
+            "C": 36,
+            "D": 22,
+            "F": 77
+          }
+        },
+        "12": {
+          "count": 215,
+          "mean_absolute_error_dollars": "33766.8573",
+          "median_absolute_percentage_error": "15.1560",
+          "mean_absolute_percentage_error": "19.7609",
+          "mean_signed_percentage_error": "3.0961",
+          "within_10_percent": 72,
+          "worst_absolute_percentage_error": "164.2306",
+          "observed_comp_span_contains_sale": 148,
+          "error_grade_counts": {
+            "A": 45,
+            "B": 27,
+            "C": 34,
+            "D": 29,
+            "F": 80
+          }
+        },
+        "13": {
+          "count": 215,
+          "mean_absolute_error_dollars": "32086.5256",
+          "median_absolute_percentage_error": "14.0381",
+          "mean_absolute_percentage_error": "18.5079",
+          "mean_signed_percentage_error": "2.3839",
+          "within_10_percent": 85,
+          "worst_absolute_percentage_error": "152.6346",
+          "observed_comp_span_contains_sale": 141,
+          "error_grade_counts": {
+            "A": 40,
+            "B": 45,
+            "C": 32,
+            "D": 27,
+            "F": 71
+          }
+        },
+        "14": {
+          "count": 215,
+          "mean_absolute_error_dollars": "34263.4462",
+          "median_absolute_percentage_error": "14.1419",
+          "mean_absolute_percentage_error": "19.5273",
+          "mean_signed_percentage_error": "4.6994",
+          "within_10_percent": 85,
+          "worst_absolute_percentage_error": "113.1733",
+          "observed_comp_span_contains_sale": 143,
+          "error_grade_counts": {
+            "A": 46,
+            "B": 39,
+            "C": 34,
+            "D": 15,
+            "F": 81
+          }
+        },
+        "15": {
+          "count": 215,
+          "mean_absolute_error_dollars": "32715.9456",
+          "median_absolute_percentage_error": "11.7781",
+          "mean_absolute_percentage_error": "18.4555",
+          "mean_signed_percentage_error": "3.1855",
+          "within_10_percent": 94,
+          "worst_absolute_percentage_error": "131.6421",
+          "observed_comp_span_contains_sale": 148,
+          "error_grade_counts": {
+            "A": 54,
+            "B": 40,
+            "C": 30,
+            "D": 23,
+            "F": 68
+          }
+        },
+        "16": {
+          "count": 215,
+          "mean_absolute_error_dollars": "31580.7899",
+          "median_absolute_percentage_error": "12.0904",
+          "mean_absolute_percentage_error": "18.1392",
+          "mean_signed_percentage_error": "3.1903",
+          "within_10_percent": 95,
+          "worst_absolute_percentage_error": "196.2786",
+          "observed_comp_span_contains_sale": 152,
+          "error_grade_counts": {
+            "A": 51,
+            "B": 44,
+            "C": 24,
+            "D": 26,
+            "F": 70
+          }
+        },
+        "17": {
+          "count": 215,
+          "mean_absolute_error_dollars": "35580.7352",
+          "median_absolute_percentage_error": "15.0423",
+          "mean_absolute_percentage_error": "20.6057",
+          "mean_signed_percentage_error": "3.4912",
+          "within_10_percent": 84,
+          "worst_absolute_percentage_error": "121.1467",
+          "observed_comp_span_contains_sale": 149,
+          "error_grade_counts": {
+            "A": 45,
+            "B": 39,
+            "C": 22,
+            "D": 28,
+            "F": 81
+          }
+        },
+        "18": {
+          "count": 215,
+          "mean_absolute_error_dollars": "33793.1991",
+          "median_absolute_percentage_error": "13.7703",
+          "mean_absolute_percentage_error": "19.3394",
+          "mean_signed_percentage_error": "2.7204",
+          "within_10_percent": 80,
+          "worst_absolute_percentage_error": "132.8923",
+          "observed_comp_span_contains_sale": 152,
+          "error_grade_counts": {
+            "A": 39,
+            "B": 41,
+            "C": 33,
+            "D": 26,
+            "F": 76
+          }
+        },
+        "19": {
+          "count": 215,
+          "mean_absolute_error_dollars": "33681.5692",
+          "median_absolute_percentage_error": "13.8832",
+          "mean_absolute_percentage_error": "19.4748",
+          "mean_signed_percentage_error": "1.8736",
+          "within_10_percent": 76,
+          "worst_absolute_percentage_error": "209.1293",
+          "observed_comp_span_contains_sale": 149,
+          "error_grade_counts": {
+            "A": 43,
+            "B": 33,
+            "C": 38,
+            "D": 32,
+            "F": 69
+          }
+        }
+      }
+    }
+  },
+  "worst_feature_ranked_examples": [
+    {
+      "property_id": "0532378120",
+      "as_of": "2009-12-01",
+      "sale_price_cents": 6238300,
+      "estimate_cents": 12717837,
+      "low_cents": 12200000,
+      "high_cents": 13490000,
+      "comparable_ids": [
+        "ames:558",
+        "ames:560",
+        "ames:563",
+        "ames:773",
+        "ames:775"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0904351240",
+      "as_of": "2009-03-01",
+      "sale_price_cents": 6300000,
+      "estimate_cents": 12035233,
+      "low_cents": 9600000,
+      "high_cents": 14750000,
+      "comparable_ids": [
+        "ames:1414",
+        "ames:1489",
+        "ames:1492",
+        "ames:1507",
+        "ames:1509"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0923202060",
+      "as_of": "2009-11-01",
+      "sale_price_cents": 11500000,
+      "estimate_cents": 19846079,
+      "low_cents": 16000000,
+      "high_cents": 24000000,
+      "comparable_ids": [
+        "ames:949",
+        "ames:950",
+        "ames:977",
+        "ames:988",
+        "ames:989"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0902331010",
+      "as_of": "2009-06-01",
+      "sale_price_cents": 5850000,
+      "estimate_cents": 9320747,
+      "low_cents": 7800000,
+      "high_cents": 10790000,
+      "comparable_ids": [
+        "ames:1255",
+        "ames:1258",
+        "ames:1298",
+        "ames:1305",
+        "ames:712"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0906226060",
+      "as_of": "2009-06-01",
+      "sale_price_cents": 13100000,
+      "estimate_cents": 20628836,
+      "low_cents": 18900000,
+      "high_cents": 22500000,
+      "comparable_ids": [
+        "ames:1142",
+        "ames:1143",
+        "ames:1422",
+        "ames:537",
+        "ames:544"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0531477050",
+      "as_of": "2010-04-01",
+      "sale_price_cents": 6750000,
+      "estimate_cents": 15631121,
+      "low_cents": 14200000,
+      "high_cents": 18490000,
+      "comparable_ids": [
+        "ames:536",
+        "ames:539",
+        "ames:540",
+        "ames:541",
+        "ames:542"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0909101070",
+      "as_of": "2010-06-01",
+      "sale_price_cents": 5850000,
+      "estimate_cents": 10290305,
+      "low_cents": 8200000,
+      "high_cents": 11800000,
+      "comparable_ids": [
+        "ames:793",
+        "ames:894",
+        "ames:898",
+        "ames:899"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0534451150",
+      "as_of": "2010-05-01",
+      "sale_price_cents": 7650000,
+      "estimate_cents": 12074001,
+      "low_cents": 9300000,
+      "high_cents": 14900000,
+      "comparable_ids": [
+        "ames:616",
+        "ames:730",
+        "ames:734",
+        "ames:736",
+        "ames:738"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0916455170",
+      "as_of": "2010-02-01",
+      "sale_price_cents": 21490000,
+      "estimate_cents": 32465490,
+      "low_cents": 20100000,
+      "high_cents": 42500000,
+      "comparable_ids": [
+        "ames:957",
+        "ames:960",
+        "ames:962",
+        "ames:965",
+        "ames:969"
+      ],
+      "seed": null
+    },
+    {
+      "property_id": "0905109130",
+      "as_of": "2010-04-01",
+      "sale_price_cents": 32800000,
+      "estimate_cents": 18132591,
+      "low_cents": 16150000,
+      "high_cents": 23350000,
+      "comparable_ids": [
+        "ames:780",
+        "ames:782",
+        "ames:834"
+      ],
+      "seed": null
+    }
+  ],
+  "quote_authorized": false,
+  "offer_authorized": false
+}

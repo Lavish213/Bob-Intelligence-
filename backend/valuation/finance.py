@@ -30,13 +30,16 @@ def flip_analysis(resale_cents, purchase_cents, repairs_cents, buying_fixed_cent
     selling = rounded(Decimal(resale) * sell_rate)
     invested = purchase + repairs + fixed + buying
     profit = resale - selling - invested
-    limit = (Decimal(resale) * (1 - sell_rate) - repairs - fixed - integer(target_profit_cents)) / (1 + buy_rate)
+    target_profit = integer(target_profit_cents)
+    limit = Decimal(resale - selling - repairs - fixed - target_profit) / (1 + buy_rate)
     maximum = max(0, int(limit.to_integral_value(rounding=ROUND_FLOOR)))
     def limit_profit(amount):
         return resale - selling - amount - rounded(Decimal(amount) * buy_rate) - repairs - fixed
-    while maximum and limit_profit(maximum) < target_profit_cents:
+    while maximum and limit_profit(maximum) < target_profit:
         maximum -= 1
-    return {'buying_variable_cents': buying, 'selling_cents': selling, 'total_project_cost_cents': invested + selling, 'profit_cents': profit, 'profit_over_pre_sale_project_cost': str((Decimal(profit) / invested).quantize(Decimal('0.000001'))) if invested else None, 'purchase_limit_cents': maximum, 'target_profit_feasible_at_limit': limit_profit(maximum) >= target_profit_cents, 'cost_model': 'fixed_holding_and_financing_inputs_must_be_recomputed_if_purchase_or_term_changes', 'quote_authorized': False}
+    while maximum < 10**14 and limit_profit(maximum + 1) >= target_profit:
+        maximum += 1
+    return {'buying_variable_cents': buying, 'selling_cents': selling, 'total_project_cost_cents': invested + selling, 'profit_cents': profit, 'profit_over_pre_sale_project_cost': str((Decimal(profit) / invested).quantize(Decimal('0.000001'))) if invested else None, 'purchase_limit_cents': maximum, 'target_profit_feasible_at_limit': limit_profit(maximum) >= target_profit, 'cost_model': 'fixed_holding_and_financing_inputs_must_be_recomputed_if_purchase_or_term_changes', 'quote_authorized': False}
 
 
 def rental_analysis(annual_gross_rent_cents, vacancy_bps, other_income_cents, operating_expenses_cents, annual_debt_service_cents, capital_reserve_cents, property_value_cents, market_cap_rate_bps):
