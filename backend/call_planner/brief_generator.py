@@ -6,6 +6,8 @@ from backend.call_planner.objective_selector import get_objective
 from backend.call_planner.avoidances_builder import build_avoidances
 from backend.call_planner.escalation_rules import build_escalation_rules
 from backend.valuation.engine import valuation_for_brief
+from backend.valuation.san_joaquin import county_context
+from backend.valuation.california import california_context
 
 
 def readiness(lead, prop, packet):
@@ -68,6 +70,6 @@ def generate_call_brief(lead_id, lead, prop, intel_packet, seller_memory, situat
         avoid=list(dict.fromkeys(avoid)), escalation_rules=build_escalation_rules(intel_packet, situation_label, seller_memory),
         opener_hint='Disclose that you are an AI assistant in the first sentence. Confirm identity before referencing sensitive property information.',
         confidence=round(len(facts) / 7, 3), created_at=now.isoformat(), expires_at=(now + timedelta(hours=ttl_hours)).isoformat(),
-        evidence={'confirmed_boxes': list(facts), 'confidence_meaning': 'fraction_of_checklist_with_confirmed_evidence_not_probability', 'packet_state': intel_packet.get('packet_state', 'missing'), 'packet_version': intel_packet.get('packet_version'), 'valuation': valuation_for_brief(lead_id, lead, prop, intel_packet)},
+        evidence={'confirmed_boxes': list(facts), 'confidence_meaning': 'fraction_of_checklist_with_confirmed_evidence_not_probability', 'packet_state': intel_packet.get('packet_state', 'missing'), 'packet_version': intel_packet.get('packet_version'), 'valuation': valuation_for_brief(lead_id, lead, prop, intel_packet), 'county_context': county_context(lead_id, lead, prop), 'california_context': california_context(lead_id, lead, prop)},
         blocked_reasons=blocked, ready_for_call=False,
     )
