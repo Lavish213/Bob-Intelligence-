@@ -32,13 +32,17 @@ def settings():
     from uuid import UUID
     tenant = os.getenv('BOB_TENANT_ID', '00000000-0000-0000-0000-000000000001')
     UUID(tenant)
+    source = os.getenv('REI_COMMAND_URL', '')
+    parsed = urlparse(source)
+    if source and (parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password or parsed.path not in {'', '/'} or parsed.query or parsed.fragment):
+        raise ValueError('REI_COMMAND_URL must be an HTTPS service origin')
     return Settings(
         os.getenv('SUPABASE_URL', ''), os.getenv('SUPABASE_SERVICE_KEY', ''), tenant,
         _integer('BOB_WORKER_INTERVAL_MINUTES', 5, 1, 60) * 60,
         _integer('BOB_BATCH_SIZE', 20, 1, 100),
         _integer('BOB_REFRESH_HOURS', 24, 1, 168),
         _integer('BOB_LEASE_SECONDS', 120, 30, 600),
-        os.getenv('BOB_EVENT_URL', ''), os.getenv('KARPATHYS_WEBHOOK_SECRET', ''),
+        os.getenv('BOB_EVENT_URL', '') or (os.getenv('REI_COMMAND_URL', '').rstrip('/') + '/api/ingest/bob/brief-created' if os.getenv('REI_COMMAND_URL') else ''), os.getenv('KARPATHYS_WEBHOOK_SECRET', ''),
     )
 
 
