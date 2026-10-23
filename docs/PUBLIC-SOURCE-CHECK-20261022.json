@@ -1,0 +1,238 @@
+{
+  "retrieved_at": "2026-10-22T23:57:44.673262+00:00",
+  "scope": "read_only_official_public_records_no_live_lead_or_price_accuracy_claim",
+  "sources": {
+    "auction": {
+      "url": "https://www.sjgov.org/department/ttc/tax/redemption/public-auction",
+      "status": 200,
+      "sha256": "ae95d36d6cd7d0f6e3048439310d379ca0dd92dac117da3549df7217309839d2",
+      "pdf_links": [
+        {
+          "title": "Tax Sale Results (March 11-12, 2026 Auction) 199 KB \u2022 pdf \u2022 June 2, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/tax-sale-results-march-2026.pdf?sfvrsn=472d8e65_12"
+        },
+        {
+          "title": "Excess Proceeds (March 11-12, 2026 Auction) 450 KB \u2022 pdf \u2022 June 2, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/excess-proceeds-march-2026.pdf?sfvrsn=1f82eec3_21"
+        },
+        {
+          "title": "Claim for Excess Proceeds Form (March 11-12, 2026 Auction) 343 KB \u2022 pdf \u2022 June 2, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/claim-excess-proceeds-form-march-2026.pdf?sfvrsn=d2ac5ff7_15"
+        },
+        {
+          "title": "Excess Proceeds (May 21-22, 2025 Auction) 280 KB \u2022 pdf \u2022 June 2, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/excess-proceeds-may-2025.pdf?sfvrsn=f5b919a5_8"
+        },
+        {
+          "title": "Tax Sale Results Reoffer (May 21-22, 2025 Auction) 153 KB \u2022 pdf \u2022 May 27, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/tax-sale-results-reoffer-may-2025.pdf?sfvrsn=bba3bd63_8"
+        },
+        {
+          "title": "Tax Sale Results (March 5-6, 2025 Auction) 614 KB \u2022 pdf \u2022 May 27, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/tax-sale-results-march-2025.pdf?sfvrsn=5fab2d48_8"
+        },
+        {
+          "title": "Tax Sale Results (July 17-18, 2024 Auction) 197 KB \u2022 pdf \u2022 May 27, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/tax-sale-results-july-2024.pdf?sfvrsn=f1d16cde_10"
+        },
+        {
+          "title": "Tax Sale Results (May 8-9, 2024 Auction) 23 KB \u2022 pdf \u2022 May 27, 2026 get_app",
+          "url": "http://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/tax-sale-results-may-2024.pdf?sfvrsn=16ffa441_25"
+        }
+      ],
+      "next_auction_tbd": true,
+      "document": {
+        "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/excess-proceeds/tax-sale-results-march-2026.pdf?sfvrsn=472d8e65_12",
+        "sha256": "507acb26f33044cf55b91845d5255a110f9a324e48b3c4d9715aaeaa5cbeb843",
+        "pages": 3,
+        "result_vintage": "March 2026 auction",
+        "recorded_sold_rows": [
+          {
+            "apn_as_published": "027-134-130-000",
+            "auction_price_cents": 42750000,
+            "transaction_type": "tax_auction",
+            "condition_verified": false,
+            "arv_target_eligible": false,
+            "current_lead_verified": false
+          },
+          {
+            "apn_as_published": "147-220-110-000",
+            "auction_price_cents": 6907700,
+            "transaction_type": "tax_auction",
+            "condition_verified": false,
+            "arv_target_eligible": false,
+            "current_lead_verified": false
+          },
+          {
+            "apn_as_published": "149-170-110-000",
+            "auction_price_cents": 5750000,
+            "transaction_type": "tax_auction",
+            "condition_verified": false,
+            "arv_target_eligible": false,
+            "current_lead_verified": false
+          },
+          {
+            "apn_as_published": "149-170-290-000",
+            "auction_price_cents": 12650000,
+            "transaction_type": "tax_auction",
+            "condition_verified": false,
+            "arv_target_eligible": false,
+            "current_lead_verified": false
+          }
+        ],
+        "not_current_inventory": true,
+        "not_general_market_arv_ground_truth": true
+      }
+    },
+    "announcements": {
+      "url": "https://www.sjgov.org/department/ttc/tax/general-tax/announcements",
+      "status": 200,
+      "sha256": "79dd477ac9be3c83699cbd240214dc6246cfd29271d1937373c39339bbe3a844",
+      "pdf_links": [
+        {
+          "title": "2026-27 Secured Tax Bills Due",
+          "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/2026-27-secured-tax-bills-due.pdf?sfvrsn=32d3b389_1"
+        },
+        {
+          "title": "Notice of Property Tax Default (Delinquent) List",
+          "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/notice-of-property-tax-default-(delinquent)-listb7e43ff0dc404d2a87a906a7f08b10f8.pdf?sfvrsn=6da47222_1"
+        },
+        {
+          "title": "2026-27 Unsecured Tax Bills Due",
+          "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/2026-27-unsecured-tax-bills-due.pdf?sfvrsn=f9f4bcf3_1"
+        },
+        {
+          "title": "Notice of Property Tax Delinquency, Impending Default, and Impending Power to Sell",
+          "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/notice-of-property-tax-delinquency-impending-default-and-impending-power-to-sell-2026.pdf?sfvrsn=f85069d_8"
+        },
+        {
+          "title": "Notice of Unclaimed Money",
+          "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/notice-of-unclaimed-money-2026.pdf?sfvrsn=9f44dc0e_1"
+        },
+        {
+          "title": "Notice of Public Internet Auction March 2026",
+          "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/notice-of-public-internet-auction-march-11.pdf?sfvrsn=bb77a779_3"
+        }
+      ],
+      "next_auction_tbd": null,
+      "document": {
+        "url": "https://www.sjgov.org/docs/default-source/treasurer---tax-collector-documents/announcements/notice-of-property-tax-default-(delinquent)-listb7e43ff0dc404d2a87a906a7f08b10f8.pdf?sfvrsn=6da47222_1",
+        "sha256": "6d0b7d11d82035f807ee4f5c98df55a04599f642ddc6ca86c1ad55d0a4456b3c",
+        "pages": 4,
+        "notice_default_date": "2025-07-01",
+        "amount_vintage": "2026-09",
+        "distinct_apns_in_stored_format": 1807,
+        "does_not_establish_current_redemption_status": true
+      }
+    }
+  },
+  "contact_authorized": false,
+  "quote_authorized": false,
+  "prior_sample_recheck": [
+    {
+      "apn": "25230071",
+      "still_in_published_notice": false,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "23510002",
+      "still_in_published_notice": false,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "23914003",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "23908055",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "21918013",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "19154059",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "17909004",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "15513007",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "14123310",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "11222039",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "11208006",
+      "still_in_published_notice": false,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "09760002",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "10010022",
+      "still_in_published_notice": false,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "09430037",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    },
+    {
+      "apn": "03512305",
+      "still_in_published_notice": true,
+      "current_delinquency_verified": false,
+      "current_owner_verified": false,
+      "deal_quality_verified": false
+    }
+  ]
+}
