@@ -101,10 +101,115 @@ def test_wide_disagreement_is_reviewed_not_trimmed_until_target_price_matches():
 
 def test_large_gross_offsetting_adjustments_cannot_hide_behind_small_net_adjustment():
     payload = request()
-    payload['comparables'][0]['adjustments'].extend([{'category': 'condition', 'amount_cents': 20000000, 'evidence_ref': 'paired:condition', 'reviewed_by': 'operator:synthetic'}, {'category': 'other', 'amount_cents': -20000000, 'evidence_ref': 'paired:other', 'reviewed_by': 'operator:synthetic'}])
+    payload['comparables'][0]['adjustments'].extend([
+        {'category': 'condition', 'amount_cents': 4400000, 'evidence_ref': 'paired:condition', 'reviewed_by': 'operator:synthetic'},
+        {'category': 'quality', 'amount_cents': 4400000, 'evidence_ref': 'paired:quality', 'reviewed_by': 'operator:synthetic'},
+        {'category': 'other', 'amount_cents': -4400000, 'evidence_ref': 'paired:other', 'reviewed_by': 'operator:synthetic'},
+        {'category': 'garage', 'amount_cents': -4400000, 'evidence_ref': 'paired:garage', 'reviewed_by': 'operator:synthetic'},
+    ])
     result = compare_sales(payload)
+    assert all(abs(a['amount_cents']) * 10000 <= 1000 * 45000000 for a in payload['comparables'][0]['adjustments'])
     assert result['status'] == 'needs_review'
     assert 'large_gross_adjustments' in result['review_reasons']
+
+
+def test_single_oversized_adjustment_is_rejected_not_merely_flagged():
+    payload = request()
+    payload['comparables'][0]['adjustments'].append({'category': 'condition', 'amount_cents': 20000000, 'evidence_ref': 'paired:condition', 'reviewed_by': 'operator:synthetic'})
+    result = compare_sales(payload)
+    assert {r['reason'] for r in result['rejected_comparables']} == {'single_adjustment_exceeds_line_policy'}
+    assert result['point_cents'] is None
+
+
+def test_line_adjustment_policy_boundary_is_inclusive():
+    for amount, accepted in ((4500000, True), (4500001, False)):
+        payload = request()
+        payload['comparables'][0]['adjustments'].append({'category': 'quality', 'amount_cents': amount, 'evidence_ref': 'paired:quality', 'reviewed_by': 'operator:synthetic'})
+        rejected = compare_sales(payload)['rejected_comparables']
+        assert (rejected == []) is accepted
+
+
+def test_negative_line_adjustment_is_capped_on_magnitude():
+    payload = request()
+    payload['comparables'][0]['adjustments'].append({'category': 'quality', 'amount_cents': -20000000, 'evidence_ref': 'paired:quality', 'reviewed_by': 'operator:synthetic'})
+    assert {r['reason'] for r in compare_sales(payload)['rejected_comparables']} == {'single_adjustment_exceeds_line_policy'}
+
+
+def test_area_divergence_outside_policy_is_rejected():
+    payload = request()
+    payload['comparables'][0]['features']['living_area_sqft'] = 1800 + 451
+    assert {r['reason'] for r in compare_sales(payload)['rejected_comparables']} == {'living_area_outside_divergence_policy'}
+
+
+def test_area_divergence_policy_boundary_is_inclusive():
+    for area, accepted in ((1800 + 450, True), (1800 + 451, False)):
+        payload = request()
+        payload['comparables'][0]['features']['living_area_sqft'] = area
+        rejected = compare_sales(payload)['rejected_comparables']
+        assert (rejected == []) is accepted, area
+
+
+def test_area_divergence_is_symmetric_for_smaller_comparables():
+    payload = request()
+    payload['comparables'][0]['features']['living_area_sqft'] = 1800 - 451
+    assert {r['reason'] for r in compare_sales(payload)['rejected_comparables']} == {'living_area_outside_divergence_policy'}
+
+
+def test_tightened_distance_and_age_defaults_are_enforced():
+    for field, value, reason in (
+        ('distance_meters', 801, 'sale_outside_distance_policy'),
+        ('closed_on', None, 'sale_outside_age_policy'),
+    ):
+        payload = request()
+        comp = payload['comparables'][0]
+        if field == 'closed_on':
+            comp['closed_on'] = (date.today() - timedelta(days=181)).isoformat()
+            comp['contract_on'] = comp['closed_on']
+        else:
+            comp[field] = value
+        assert {r['reason'] for r in compare_sales(payload)['rejected_comparables']} == {reason}
+
+
+def test_distance_and_age_defaults_accept_values_inside_policy():
+    payload = request()
+    comp = payload['comparables'][0]
+    comp['distance_meters'] = 800
+    comp['closed_on'] = (date.today() - timedelta(days=180)).isoformat()
+    comp['contract_on'] = comp['closed_on']
+    assert compare_sales(payload)['rejected_comparables'] == []
+
+
+def test_after_repair_rejects_a_comparable_that_did_not_sell_renovated():
+    payload = request('after_repair')
+    comp = payload['comparables'][0]
+    comp['features']['condition'] = 'unrenovated'
+    comp['adjustments'].append({'category': 'condition', 'amount_cents': 2000000, 'evidence_ref': 'paired:condition-delta', 'reviewed_by': 'operator:synthetic'})
+    result = compare_sales(payload)
+    assert {r['reason'] for r in result['rejected_comparables']} == {'after_repair_requires_renovated_comp_evidence'}
+    assert result['point_cents'] is None
+
+
+def test_as_is_still_allows_an_evidenced_condition_adjustment():
+    payload = request('as_is')
+    comp = payload['comparables'][0]
+    comp['features']['condition'] = 'unrenovated'
+    comp['adjustments'].append({'category': 'condition', 'amount_cents': 2000000, 'evidence_ref': 'paired:condition-delta', 'reviewed_by': 'operator:synthetic'})
+    assert compare_sales(payload)['rejected_comparables'] == []
+
+
+def test_after_repair_accepts_comparables_already_in_subject_condition():
+    assert compare_sales(request('after_repair'))['rejected_comparables'] == []
+
+
+def test_new_policy_keys_are_configurable_and_bounded():
+    payload = request()
+    payload['comparables'][0]['features']['living_area_sqft'] = 1800 + 451
+    relaxed = compare_sales({**payload, 'policy': {'max_area_divergence_bps': 5000}})
+    assert relaxed['rejected_comparables'] == []
+    with pytest.raises(ValueError):
+        compare_sales({**payload, 'policy': {'max_area_divergence_bps': 0}})
+    with pytest.raises(ValueError):
+        compare_sales({**payload, 'policy': {'unknown_policy_key': 1}})
 
 
 def test_binding_missing_data_and_stale_effective_date_fail_closed():
@@ -242,3 +347,24 @@ def test_cli_rejects_oversized_input_before_json_parsing(tmp_path):
     input_file.write_text(' ' * 2000001)
     run = subprocess.run([sys.executable, '-m', 'backend.valuation', str(input_file)], capture_output=True, text=True, timeout=15)
     assert run.returncode == 2 and json.loads(run.stdout)['status'] == 'invalid_input'
+
+
+def test_new_gate_rejections_are_order_independent():
+    outcomes = set()
+    for order in permutations(range(3)):
+        payload = deepcopy(request())
+        payload['comparables'] = [deepcopy(payload['comparables'][index]) for index in order]
+        target = next(c for c in payload['comparables'] if c['property_id'] == 'comp-2')
+        target['features']['living_area_sqft'] = 2700
+        result = compare_sales(payload)
+        outcomes.add((tuple(sorted(r['reason'] for r in result['rejected_comparables'])), result['status'], result['point_cents']))
+    assert outcomes == {(('living_area_outside_divergence_policy',), 'needs_data', None)}
+
+
+def test_gate_precedence_is_stable_when_several_policies_are_violated():
+    payload = deepcopy(request())
+    comp = payload['comparables'][0]
+    comp['distance_meters'] = 9000
+    comp['features']['living_area_sqft'] = 2700
+    comp['adjustments'].append({'category': 'quality', 'amount_cents': 20000000, 'evidence_ref': 'paired:quality', 'reviewed_by': 'operator:synthetic'})
+    assert [r['reason'] for r in compare_sales(payload)['rejected_comparables']] == ['sale_outside_distance_policy']

@@ -90,12 +90,15 @@ def compare_sales(request, today=None):
     if not isinstance(comps, list) or len(comps) > 50:
         raise ValueError('Comparable budget exceeded')
     policy = request.get('policy', {})
-    if not isinstance(policy, dict) or set(policy) - {'max_age_days', 'max_distance_meters', 'max_gross_adjustment_bps', 'max_spread_bps'}:
+    if not isinstance(policy, dict) or set(policy) - {'max_age_days', 'max_distance_meters', 'max_gross_adjustment_bps', 'max_spread_bps', 'max_line_adjustment_bps', 'max_area_divergence_bps'}:
         raise ValueError('Unknown valuation policy')
-    max_age = integer(policy.get('max_age_days', 365), 1, 730)
-    max_distance = integer(policy.get('max_distance_meters', 5000), 1, 50000)
+    max_age = integer(policy.get('max_age_days', 180), 1, 730)
+    max_distance = integer(policy.get('max_distance_meters', 800), 1, 50000)
     max_gross = integer(policy.get('max_gross_adjustment_bps', 3000), 1, 10000)
     max_spread = integer(policy.get('max_spread_bps', 2000), 1, 10000)
+    max_line = integer(policy.get('max_line_adjustment_bps', 1000), 1, 10000)
+    max_area_divergence = integer(policy.get('max_area_divergence_bps', 2500), 1, 10000)
+    subject_area = integer(subject['features']['living_area_sqft'], 1, 100000)
     property_counts = Counter(c.get('property_id') for c in comps if isinstance(c, dict) and isinstance(c.get('property_id'), str))
     sale_counts = Counter(c.get('sale_id') for c in comps if isinstance(c, dict) and isinstance(c.get('sale_id'), str))
     accepted, rejected, review_reasons = [], [], set()
@@ -126,6 +129,9 @@ def compare_sales(request, today=None):
             if distance > max_distance:
                 reason = reason or 'sale_outside_distance_policy'
             validate_features(comp['features'])
+            comp_area = integer(comp['features']['living_area_sqft'], 1, 100000)
+            if abs(comp_area - subject_area) * 10000 > max_area_divergence * subject_area:
+                reason = reason or 'living_area_outside_divergence_policy'
             adjustments = comp['adjustments']
             if not isinstance(adjustments, list) or len(adjustments) > len(CATEGORIES):
                 raise ValueError('Invalid adjustment budget')
@@ -139,6 +145,8 @@ def compare_sales(request, today=None):
                 reviewer = token(adjustment['reviewed_by'])
                 if category == 'concessions' and amount > 0:
                     raise ValueError('Concession adjustments cannot be positive')
+                if abs(amount) * 10000 > max_line * price:
+                    reason = reason or 'single_adjustment_exceeds_line_policy'
                 seen.add(category)
                 net += amount
                 gross += abs(amount)
@@ -150,6 +158,8 @@ def compare_sales(request, today=None):
                 required.add('location')
             if not required <= seen:
                 reason = reason or 'unsupported_feature_time_or_concession_adjustment'
+            if purpose == 'after_repair' and 'condition' in required:
+                reason = reason or 'after_repair_requires_renovated_comp_evidence'
             adjusted = price + net
             if not 0 < adjusted <= 10**14:
                 reason = reason or 'invalid_adjusted_value'

@@ -27,8 +27,9 @@ def test_exact_half_cent_is_correct_in_every_comparable_order():
         comp['closed_on'] = (date.today() - timedelta(days=360)).isoformat()
         comp['contract_on'] = comp['available_on'] = comp['closed_on']
         comp['adjustments'] = [{'category': category, 'amount_cents': 0, 'evidence_ref': 'synthetic:half-cent-oracle', 'reviewed_by': 'test:oracle'} for category in ('market_time', 'concessions', 'living_area')]
+    oracle_policy = {'max_area_divergence_bps': 10000, 'max_distance_meters': 50000, 'max_age_days': 730}
     for comps in permutations(payload['comparables']):
-        assert compare_sales({**payload, 'comparables': list(comps)})['point_cents'] == 41569075
+        assert compare_sales({**payload, 'comparables': list(comps), 'policy': oracle_policy})['point_cents'] == 41569075
 
 
 @pytest.mark.parametrize('seed', range(20))
