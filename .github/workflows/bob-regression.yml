@@ -22,7 +22,8 @@ jobs:
       - run: uv sync --locked
       - run: uv run pytest --cov=backend --cov-branch -q
       - run: uv run pytest tests/test_valuation_output_drift.py -q
-      - run: uv run ruff check backend tests scripts/benchmark_valuation.py
+      - run: uv run pytest tests/test_cohort_builder.py -q
+      - run: uv run ruff check backend tests scripts/benchmark_valuation.py scripts/build_san_joaquin_cohort.py
       - run: npm ci --prefix tests --ignore-scripts --no-audit --no-fund
       - run: npm run test:database --prefix tests
       - run: git diff --check
