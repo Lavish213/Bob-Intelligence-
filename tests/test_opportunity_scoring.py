@@ -130,3 +130,35 @@ class TestBriefIntegration:
         brief = generate_call_brief('lead-1', {'id': 'lead-1', 'property_id': 'p1'}, {'id': 'p1', 'state': 'CA'}, {}, {}).to_dict()
         assert brief['blocked_reasons']
         assert brief['evidence']['opportunity']['readiness'] == 'ARCHIVED'
+
+
+class TestKnownFactsSurviveIncompleteEconomics:
+    def test_a_known_arv_is_reported_even_when_repairs_are_missing(self):
+        result = grade_opportunity(valuation(), repairs_cents=None, asking_cents=20000000)
+        assert result['economics']['state'] == 'unknown'
+        assert result['economics']['arv_point_cents'] == 46000000
+        assert result['economics']['asking_price_cents'] == 20000000
+        assert result['economics']['purchase_limit_cents'] is None
+        assert result['economics']['headroom_cents'] is None
+
+    def test_a_known_asking_price_is_reported_when_the_arv_is_missing(self):
+        result = grade_opportunity(valuation(point=None), repairs_cents=2000000, asking_cents=20000000)
+        assert result['economics']['asking_price_cents'] == 20000000
+        assert result['economics']['repair_estimate_cents'] == 2000000
+        assert result['economics']['arv_point_cents'] is None
+
+    def test_every_economics_shape_exposes_the_same_keys(self):
+        shapes = [
+            grade_opportunity(valuation(), 2000000, 20000000),
+            grade_opportunity(valuation(), None, 20000000),
+            grade_opportunity(valuation(point=None), None, None),
+        ]
+        keys = {frozenset(shape['economics']) for shape in shapes}
+        assert len(keys) == 1, 'a consumer should not have to branch on which keys exist'
+
+    def test_derived_figures_are_never_present_without_all_three_inputs(self):
+        for repairs, asking in ((None, 20000000), (2000000, None), (None, None)):
+            money = grade_opportunity(valuation(), repairs, asking)['economics']
+            assert money['purchase_limit_cents'] is None
+            assert money['headroom_cents'] is None
+            assert money['headroom_bps'] is None

@@ -1,3 +1,6 @@
+CREATE INDEX IF NOT EXISTS bob_decisions_latest_per_lead
+    ON public.bob_decisions (tenant_id, lead_id, created_at DESC);
+
 CREATE OR REPLACE FUNCTION public.bob_opportunity_overview(p_tenant_id uuid, p_limit integer DEFAULT 25)
 RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
 WITH latest AS (

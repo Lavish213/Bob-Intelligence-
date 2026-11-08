@@ -55,11 +55,12 @@ def economics(valuation, repairs_cents, asking_cents, multiplier_bps=7000):
     repairs = repairs_cents if isinstance(repairs_cents, int) and not isinstance(repairs_cents, bool) and 0 <= repairs_cents <= 10**14 else None
     asking = _money(asking_cents)
     missing = [name for name, value in (('arv_point_indication', arv), ('repair_estimate', repairs), ('asking_price', asking)) if value is None]
+    known = {'arv_point_cents': arv, 'repair_estimate_cents': repairs, 'asking_price_cents': asking}
     if missing:
-        return {'state': 'unknown', 'missing_inputs': missing, 'purchase_limit_cents': None, 'headroom_cents': None, 'headroom_bps': None}
+        return {'state': 'unknown', 'missing_inputs': missing, **known, 'purchase_limit_cents': None, 'headroom_cents': None, 'headroom_bps': None}
     limit = screening_mao(arv, repairs, integer(multiplier_bps, 1, 10000))
     headroom = limit - asking
-    return {'state': 'known', 'missing_inputs': [], 'arv_point_cents': arv, 'repair_estimate_cents': repairs, 'asking_price_cents': asking, 'purchase_limit_cents': limit, 'headroom_cents': headroom, 'headroom_bps': int(Decimal(headroom) * 10000 / arv)}
+    return {'state': 'known', 'missing_inputs': [], **known, 'purchase_limit_cents': limit, 'headroom_cents': headroom, 'headroom_bps': int(Decimal(headroom) * 10000 / arv)}
 
 
 def _grade_from_headroom(headroom_bps):
