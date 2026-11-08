@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from backend.valuation.engine import integer
-from backend.valuation.finance import screening_mao
+from backend.valuation.finance import flip_analysis, screening_mao
 
 
 SCHEMA_VERSION = '1.0'
@@ -14,6 +14,7 @@ GRADE_HEADROOM_BPS = (('A', 1000), ('B', 500), ('C', 200), ('D', 0))
 EVIDENCE_GRADE_CEILING = {'verified': 'A', 'supported': 'B', 'thin': 'C'}
 GRADE_ORDER = ('A', 'B', 'C', 'D', 'F')
 MIN_HOT_BUY_GRADE = 'B'
+COST_MODEL_FIELDS = ('buying_fixed_cents', 'holding_cents', 'financing_fixed_cents', 'target_profit_cents', 'buying_bps', 'selling_bps')
 
 
 def _money(value):
@@ -51,17 +52,40 @@ def evidence_confidence(valuation):
     return ('verified', reasons) if not reasons else ('supported', reasons)
 
 
-def economics(valuation, repairs_cents, asking_cents, multiplier_bps=7000):
+def _solved_limit(arv, repairs, asking, cost_model):
+    if not isinstance(cost_model, dict) or set(cost_model) != set(COST_MODEL_FIELDS):
+        return None
+    try:
+        return flip_analysis(resale_cents=arv, purchase_cents=asking, repairs_cents=repairs,
+                             buying_fixed_cents=cost_model['buying_fixed_cents'],
+                             holding_cents=cost_model['holding_cents'],
+                             financing_fixed_cents=cost_model['financing_fixed_cents'],
+                             target_profit_cents=cost_model['target_profit_cents'],
+                             buying_bps=cost_model['buying_bps'],
+                             selling_bps=cost_model['selling_bps'])
+    except (ValueError, TypeError, ArithmeticError):
+        return None
+
+
+def economics(valuation, repairs_cents, asking_cents, multiplier_bps=7000, cost_model=None):
     arv = _money((valuation or {}).get('point_cents')) if isinstance(valuation, dict) else None
     repairs = repairs_cents if isinstance(repairs_cents, int) and not isinstance(repairs_cents, bool) and 0 <= repairs_cents <= 10**14 else None
     asking = _money(asking_cents)
     missing = [name for name, value in (('arv_point_indication', arv), ('repair_estimate', repairs), ('asking_price', asking)) if value is None]
     known = {'arv_point_cents': arv, 'repair_estimate_cents': repairs, 'asking_price_cents': asking}
     if missing:
-        return {'state': 'unknown', 'missing_inputs': missing, **known, 'purchase_limit_cents': None, 'headroom_cents': None, 'headroom_bps': None}
-    limit = screening_mao(arv, repairs, integer(multiplier_bps, 1, 10000))
+        return {'state': 'unknown', 'missing_inputs': missing, **known, 'purchase_limit_cents': None,
+                'headroom_cents': None, 'headroom_bps': None, 'limit_method': None,
+                'percentage_screen_limit_cents': None, 'profit_at_asking_cents': None}
+    screen = screening_mao(arv, repairs, integer(multiplier_bps, 1, 10000))
+    solved = _solved_limit(arv, repairs, asking, cost_model)
+    limit = solved['purchase_limit_cents'] if solved else screen
+    method = 'profit_solved_from_itemised_costs' if solved else 'percentage_screen_not_an_underwriting_result'
     headroom = limit - asking
-    return {'state': 'known', 'missing_inputs': [], **known, 'purchase_limit_cents': limit, 'headroom_cents': headroom, 'headroom_bps': int(Decimal(headroom) * 10000 / arv)}
+    return {'state': 'known', 'missing_inputs': [], **known, 'purchase_limit_cents': limit,
+            'headroom_cents': headroom, 'headroom_bps': int(Decimal(headroom) * 10000 / arv),
+            'limit_method': method, 'percentage_screen_limit_cents': screen,
+            'profit_at_asking_cents': solved['profit_cents'] if solved else None}
 
 
 def _grade_from_headroom(headroom_bps):
@@ -71,18 +95,20 @@ def _grade_from_headroom(headroom_bps):
     return 'F'
 
 
-def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_reasons=None, multiplier_bps=7000):
+def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_reasons=None, multiplier_bps=7000, cost_model=None):
     blocked = sorted(reason for reason in blocked_reasons if isinstance(reason, str)) if isinstance(blocked_reasons, list) else []
     level, evidence_reasons = evidence_confidence(valuation)
-    money = economics(valuation, repairs_cents, asking_cents, multiplier_bps)
+    money = economics(valuation, repairs_cents, asking_cents, multiplier_bps, cost_model)
     signals, contradictions, missing = [], list(evidence_reasons), list(money['missing_inputs'])
     grade = None
     if money['state'] == 'known':
         grade = _grade_from_headroom(money['headroom_bps'])
         if money['headroom_bps'] >= GRADE_HEADROOM_BPS[1][1]:
-            signals.append('asking_price_below_screening_purchase_limit')
+            signals.append('asking_price_below_purchase_limit')
         else:
-            contradictions.append('asking_price_at_or_above_screening_purchase_limit')
+            contradictions.append('asking_price_at_or_above_purchase_limit')
+        if money['limit_method'] == 'percentage_screen_not_an_underwriting_result':
+            contradictions.append('limit_is_a_percentage_screen_itemised_costs_were_not_supplied')
     if grade is not None and level in EVIDENCE_GRADE_CEILING:
         capped = _cap(grade, EVIDENCE_GRADE_CEILING[level])
         if capped != grade:

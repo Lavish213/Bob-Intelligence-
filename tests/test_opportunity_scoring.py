@@ -220,3 +220,63 @@ class TestRandomizedHostileInput:
         value = {'status': 'ready_advisory', 'point_cents': 100, 'comparable_count': 5, 'review_reasons': [], 'spread_bps': 1}
         assert grade_opportunity(value, 1, 1, blocked_reasons='suppressed')['blocked_reasons'] == []
         assert grade_opportunity(value, 1, 1, blocked_reasons=['suppression_not_cleared'])['blocked_reasons'] == ['suppression_not_cleared']
+
+
+COSTS = {'buying_fixed_cents': 350000, 'holding_cents': 1827100, 'financing_fixed_cents': 647000,
+         'target_profit_cents': 3500000, 'buying_bps': 150, 'selling_bps': 750}
+
+
+class TestTheHeuristicIsNotTheVerdict:
+    def test_itemised_costs_replace_the_percentage_screen(self):
+        value = valuation(point=41710900, count=4)
+        screen = grade_opportunity(value, 1725000, 31000000)['economics']
+        solved = grade_opportunity(value, 1725000, 31000000, cost_model=COSTS)['economics']
+        assert screen['limit_method'] == 'percentage_screen_not_an_underwriting_result'
+        assert solved['limit_method'] == 'profit_solved_from_itemised_costs'
+        assert solved['purchase_limit_cents'] > screen['purchase_limit_cents']
+
+    def test_the_screen_is_still_reported_alongside_the_solved_limit(self):
+        money = grade_opportunity(valuation(point=41710900), 1725000, 31000000, cost_model=COSTS)['economics']
+        assert money['percentage_screen_limit_cents'] == 27472630
+        assert money['purchase_limit_cents'] != money['percentage_screen_limit_cents']
+
+    def test_a_screen_only_grade_says_so_in_its_contradictions(self):
+        result = grade_opportunity(valuation(point=41710900), 1725000, 31000000)
+        assert 'limit_is_a_percentage_screen_itemised_costs_were_not_supplied' in result['contradictory_evidence']
+
+    def test_a_solved_grade_does_not_carry_that_caveat(self):
+        result = grade_opportunity(valuation(point=41710900), 1725000, 31000000, cost_model=COSTS)
+        assert 'limit_is_a_percentage_screen_itemised_costs_were_not_supplied' not in result['contradictory_evidence']
+
+    def test_profit_at_asking_is_reported_when_costs_are_known(self):
+        money = grade_opportunity(valuation(point=41710900), 1725000, 31000000, cost_model=COSTS)['economics']
+        assert money['profit_at_asking_cents'] == 2568482
+
+    def test_a_lower_profit_target_can_make_a_rejected_deal_viable(self):
+        relaxed = {**COSTS, 'target_profit_cents': 1000000}
+        tight = grade_opportunity(valuation(point=41710900), 1725000, 31000000, cost_model=COSTS)
+        loose = grade_opportunity(valuation(point=41710900), 1725000, 31000000, cost_model=relaxed)
+        assert loose['economics']['headroom_cents'] > tight['economics']['headroom_cents']
+
+    @pytest.mark.parametrize('broken', [{}, {'buying_fixed_cents': 1}, 'costs', 7, [],
+                                        {**COSTS, 'extra': 1}, {**COSTS, 'buying_bps': 'x'},
+                                        {**COSTS, 'holding_cents': 1.5}])
+    def test_a_malformed_cost_model_falls_back_to_the_screen_rather_than_raising(self, broken):
+        money = grade_opportunity(valuation(point=41710900), 1725000, 31000000, cost_model=broken)['economics']
+        assert money['limit_method'] == 'percentage_screen_not_an_underwriting_result'
+        assert money['purchase_limit_cents'] == money['percentage_screen_limit_cents']
+
+    def test_unknown_economics_still_exposes_the_new_keys(self):
+        money = grade_opportunity(valuation(), None, None, cost_model=COSTS)['economics']
+        assert money['limit_method'] is None
+        assert money['percentage_screen_limit_cents'] is None
+        assert money['profit_at_asking_cents'] is None
+
+    def test_the_economics_key_set_is_stable_across_every_path(self):
+        shapes = {
+            frozenset(grade_opportunity(valuation(), 1725000, 31000000)['economics']),
+            frozenset(grade_opportunity(valuation(), 1725000, 31000000, cost_model=COSTS)['economics']),
+            frozenset(grade_opportunity(valuation(), None, None)['economics']),
+            frozenset(grade_opportunity(valuation(point=None), None, None, cost_model='bad')['economics']),
+        }
+        assert len(shapes) == 1
