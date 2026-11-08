@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 
 from backend.rehab.costbook import (CALIBRATION_STATUS, CONCEALED_AREAS, COSTBOOK, COSTBOOK_VERSION,
-                                    PERMIT_TRIGGERING, PRICEABLE_FROM, SEVERITIES, SOURCE_CLASSES,
-                                    TIMELINE_WEEKS)
+                                    PERMIT_TRIGGERING, PRICE_INDEX_AT_PRICING_MILLI, PRICE_INDEX_DESCRIPTION,
+                                    PRICE_INDEX_SERIES, PRICEABLE_FROM, PRICED_ON, SEVERITIES, SOURCE_CLASSES,
+                                    STALE_AFTER_DAYS, TIMELINE_WEEKS, reprice_cents)
 from backend.valuation.engine import integer, token
 
 SCHEMA_VERSION = '1.0'
@@ -56,7 +58,22 @@ def _priceable(observation):
     return True, None
 
 
-def estimate_rehab(observations, living_area_sqft, contingency_bps=1500):
+def _index_state(current_index_milli, today):
+    age = (today - date.fromisoformat(PRICED_ON)).days
+    state = {'series': PRICE_INDEX_SERIES, 'series_description': PRICE_INDEX_DESCRIPTION,
+             'priced_on': PRICED_ON, 'age_days': age, 'stale': age > STALE_AFTER_DAYS,
+             'index_at_pricing_milli': PRICE_INDEX_AT_PRICING_MILLI,
+             'index_supplied_milli': current_index_milli, 'repriced': False, 'factor_bps': None}
+    if current_index_milli is None or PRICE_INDEX_AT_PRICING_MILLI is None:
+        state['reason'] = 'costbook_was_never_tied_to_an_index_reading_so_it_cannot_be_repriced'
+        return state, None
+    state['repriced'] = True
+    state['factor_bps'] = reprice_cents(10000, PRICE_INDEX_AT_PRICING_MILLI, current_index_milli)
+    state['reason'] = None
+    return state, current_index_milli
+
+
+def estimate_rehab(observations, living_area_sqft, contingency_bps=1500, current_index_milli=None, today=None):
     area_sqft = integer(living_area_sqft, 1, 100000)
     contingency = integer(contingency_bps, 0, 10000)
     if not isinstance(observations, list) or len(observations) > MAX_OBSERVATIONS:
@@ -89,6 +106,14 @@ def estimate_rehab(observations, living_area_sqft, contingency_bps=1500):
                        'source_ref': observation['source_ref'], 'band_widened_for_inference': widened,
                        'low_cents': band_low, 'expected_cents': band_expected, 'high_cents': band_high,
                        'permit_likely': observation['area'] in PERMIT_TRIGGERING})
+    index_state, factor_target = _index_state(current_index_milli, today or date.today())
+    if factor_target is not None:
+        for item in priced:
+            for key in ('low_cents', 'expected_cents', 'high_cents'):
+                item[key] = reprice_cents(item[key], PRICE_INDEX_AT_PRICING_MILLI, factor_target)
+        low = reprice_cents(low, PRICE_INDEX_AT_PRICING_MILLI, factor_target)
+        expected = reprice_cents(expected, PRICE_INDEX_AT_PRICING_MILLI, factor_target)
+        high = reprice_cents(high, PRICE_INDEX_AT_PRICING_MILLI, factor_target)
     priced_areas = {item['area'] for item in priced}
     satisfied = [entry for entry in inspections if entry['area'] in priced_areas]
     inspections = [entry for entry in inspections if entry['area'] not in priced_areas]
@@ -99,6 +124,7 @@ def estimate_rehab(observations, living_area_sqft, contingency_bps=1500):
         'schema_version': SCHEMA_VERSION,
         'costbook_version': COSTBOOK_VERSION,
         'calibration_status': CALIBRATION_STATUS,
+        'price_index': index_state,
         'living_area_sqft': area_sqft,
         'priced_items': sorted(priced, key=lambda item: (-item['expected_cents'], item['area'])),
         'inspection_required': sorted(inspections, key=lambda item: item['area']),

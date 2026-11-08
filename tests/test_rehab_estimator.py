@@ -217,3 +217,65 @@ class TestGradingConsumesTheEstimate:
         result = grade_opportunity(self.VALUATION, asking_cents=22500000, rehab=rehab)
         assert result['rehab_basis'] is None
         assert result['economics']['repair_estimate_cents'] is None
+
+
+class TestPriceIndexProvenance:
+    def test_an_unanchored_costbook_says_so_and_does_not_reprice(self):
+        state = estimate_rehab([obs('roof')], 1800)['price_index']
+        assert state['repriced'] is False
+        assert state['index_at_pricing_milli'] is None
+        assert 'never_tied_to_an_index_reading' in state['reason']
+
+    def test_the_declared_series_is_the_public_bls_construction_materials_index(self):
+        state = estimate_rehab([obs('roof')], 1800)['price_index']
+        assert state['series'] == 'WPUSI012011'
+        assert 'Producer Price Index' in state['series_description']
+
+    def test_an_anchored_costbook_reprices_by_the_index_ratio(self, monkeypatch):
+        from backend.rehab import costbook, estimator
+        monkeypatch.setattr(costbook, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        monkeypatch.setattr(estimator, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        base = estimate_rehab([obs('roof')], 1800)['expected_cents']
+        up = estimate_rehab([obs('roof')], 1800, current_index_milli=385000)
+        assert up['price_index']['repriced'] is True
+        assert up['price_index']['factor_bps'] == 11000
+        assert up['expected_cents'] == int(round(base * 385000 / 350000))
+
+    def test_repricing_is_symmetric_for_a_falling_index(self, monkeypatch):
+        from backend.rehab import costbook, estimator
+        monkeypatch.setattr(costbook, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        monkeypatch.setattr(estimator, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        base = estimate_rehab([obs('roof')], 1800)['expected_cents']
+        down = estimate_rehab([obs('roof')], 1800, current_index_milli=315000)['expected_cents']
+        assert down < base
+        assert down == int(round(base * 315000 / 350000))
+
+    def test_repricing_keeps_the_band_ordered_and_the_total_consistent(self, monkeypatch):
+        from backend.rehab import costbook, estimator
+        monkeypatch.setattr(costbook, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        monkeypatch.setattr(estimator, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        result = estimate_rehab([obs('roof'), obs('kitchen'), obs('bathroom', quantity=2)], 1800, current_index_milli=402000)
+        assert result['low_cents'] <= result['expected_cents'] <= result['high_cents']
+        assert all(isinstance(result[key], int) for key in ('low_cents', 'expected_cents', 'high_cents'))
+
+    def test_a_costbook_older_than_the_index_refresh_window_is_marked_stale(self):
+        from datetime import date, timedelta
+        fresh = estimate_rehab([obs('roof')], 1800, today=date(2026, 11, 8))['price_index']
+        stale = estimate_rehab([obs('roof')], 1800, today=date(2026, 11, 8) + timedelta(days=200))['price_index']
+        assert fresh['stale'] is False
+        assert stale['stale'] is True
+        assert stale['age_days'] == 200
+
+    @pytest.mark.parametrize('bad', [0, -1, 1.5, True, '350000', 10**10])
+    def test_a_malformed_index_reading_is_refused_rather_than_guessed(self, bad, monkeypatch):
+        from backend.rehab import costbook, estimator
+        monkeypatch.setattr(costbook, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        monkeypatch.setattr(estimator, 'PRICE_INDEX_AT_PRICING_MILLI', 350000)
+        with pytest.raises((ValueError, TypeError)):
+            estimate_rehab([obs('roof')], 1800, current_index_milli=bad)
+
+    def test_reprice_cents_is_exact_and_reversible_at_unity(self):
+        from backend.rehab.costbook import reprice_cents
+        assert reprice_cents(123456, 350000, 350000) == 123456
+        assert reprice_cents(1000000, 100000, 200000) == 2000000
+        assert reprice_cents(1000000, 200000, 100000) == 500000

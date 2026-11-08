@@ -2,6 +2,12 @@ from __future__ import annotations
 
 COSTBOOK_VERSION = 'san-joaquin-sfr-2026-11-placeholder'
 CALIBRATION_STATUS = 'uncalibrated_placeholder_assumptions_not_contractor_bids'
+
+PRICE_INDEX_SERIES = 'WPUSI012011'
+PRICE_INDEX_DESCRIPTION = 'BLS Producer Price Index, Special Indexes: Construction Materials, republished by FRED'
+PRICE_INDEX_AT_PRICING_MILLI = None
+PRICED_ON = '2026-11-08'
+STALE_AFTER_DAYS = 183
 UNITS = ('per_living_sqft', 'per_unit', 'per_lump')
 SEVERITIES = ('cosmetic', 'moderate', 'major')
 
@@ -45,3 +51,16 @@ COSTBOOK = {
 
 PERMIT_TRIGGERING = frozenset({'roof', 'electrical', 'plumbing', 'structural', 'foundation', 'sewer_lateral', 'hvac', 'asbestos'})
 TIMELINE_WEEKS = {'cosmetic': 1, 'moderate': 3, 'major': 7}
+
+
+def reprice_cents(amount_cents, from_index_milli, to_index_milli):
+    from decimal import Decimal, ROUND_HALF_UP
+    for value in (amount_cents, from_index_milli, to_index_milli):
+        if isinstance(value, bool) or type(value) is not int:
+            raise TypeError('Repricing needs integer cents and integer thousandths of an index point')
+    if amount_cents < 0 or amount_cents > 10**14:
+        raise ValueError('Amount out of range')
+    if not 1 <= from_index_milli <= 10**9 or not 1 <= to_index_milli <= 10**9:
+        raise ValueError('Index values out of range')
+    scaled = Decimal(amount_cents) * to_index_milli / from_index_milli
+    return int(scaled.quantize(Decimal('1'), rounding=ROUND_HALF_UP))
