@@ -90,3 +90,27 @@ def test_baseline_covers_every_scenario_and_new_gate():
     assert set(expected) == set(SCENARIOS) | {'_ratio_study_oracle'}
     reasons = {reason for name, row in expected.items() if name != '_ratio_study_oracle' for reason in row['rejection_reasons']}
     assert {'single_adjustment_exceeds_line_policy', 'living_area_outside_divergence_policy', 'sale_outside_distance_policy', 'sale_outside_age_policy', 'after_repair_requires_renovated_comp_evidence'} <= reasons
+
+
+def test_no_test_module_mutates_the_global_decimal_context():
+    from decimal import DefaultContext, getcontext
+    current = getcontext()
+    assert current.prec == DefaultContext.prec, (
+        f'global Decimal precision is {current.prec}, expected {DefaultContext.prec}. '
+        'A module-level getcontext().prec assignment leaks into every other test in the '
+        'process and silently changes valuation rounding. Use localcontext() instead.'
+    )
+    assert current.rounding == DefaultContext.rounding
+
+
+def test_the_drift_baseline_is_insensitive_to_the_calendar_day():
+    from datetime import date, timedelta
+    snapshot = observed()
+    for name, row in snapshot.items():
+        if name == '_ratio_study_oracle':
+            continue
+        for key, value in row.items():
+            assert not isinstance(value, str) or not value.startswith(str(date.today().year) + '-'), (
+                f'{name}.{key} embeds a calendar date, which would make this gate fail every day'
+            )
+    assert (date.today() + timedelta(days=1)).isoformat() not in str(snapshot)

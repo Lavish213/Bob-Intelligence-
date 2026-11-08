@@ -1,12 +1,10 @@
-from decimal import Decimal, getcontext
+from decimal import Decimal, localcontext
 
 import pytest
 
 from backend.valuation.finance import (debt_yield, equity_multiple, financing_fees, internal_rate_of_return,
                                        interest_only_payment, leverage_ratios, mortgage_payment,
                                        net_present_value, remaining_balance, yield_on_cost)
-
-getcontext().prec = 40
 
 
 class TestLeverageAndCoverage:
@@ -54,12 +52,15 @@ class TestInterestOnlyAndFees:
 class TestAmortization:
     def test_remaining_balance_matches_an_independent_amortization_loop(self):
         principal, bps, term, elapsed = 30000000, 650, 360, 120
-        rate = Decimal(bps) / Decimal(120000)
-        payment = Decimal(principal) * rate / (1 - (1 + rate) ** -term)
-        balance = Decimal(principal)
-        for _ in range(elapsed):
-            balance = balance * (1 + rate) - payment
-        assert abs(int(balance.quantize(Decimal('1'))) - remaining_balance(principal, bps, term, elapsed)['balance_cents']) <= 1
+        with localcontext() as context:
+            context.prec = 40
+            rate = Decimal(bps) / Decimal(120000)
+            payment = Decimal(principal) * rate / (1 - (1 + rate) ** -term)
+            balance = Decimal(principal)
+            for _ in range(elapsed):
+                balance = balance * (1 + rate) - payment
+            oracle = int(balance.quantize(Decimal('1')))
+        assert abs(oracle - remaining_balance(principal, bps, term, elapsed)['balance_cents']) <= 1
 
     def test_balance_is_full_at_origination_and_zero_at_maturity(self):
         assert remaining_balance(30000000, 650, 360, 0)['balance_cents'] == 30000000
