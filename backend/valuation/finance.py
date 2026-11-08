@@ -75,3 +75,98 @@ def cash_on_cash_return(annual_cash_flow_cents, initial_equity_cents):
     cash = integer(annual_cash_flow_cents, -10**14)
     equity = integer(initial_equity_cents, 1)
     return str((Decimal(cash) / equity).quantize(Decimal('0.000001')))
+
+
+def _ratio(numerator, denominator):
+    return str((Decimal(numerator) / Decimal(denominator)).quantize(Decimal('0.000001')))
+
+
+def leverage_ratios(loan_cents, value_cents, total_cost_cents=None):
+    loan = integer(loan_cents)
+    value = integer(value_cents, 1)
+    result = {'loan_to_value': _ratio(loan, value), 'loan_to_cost': None, 'equity_required_cents': max(0, value - loan)}
+    if total_cost_cents is not None:
+        result['loan_to_cost'] = _ratio(loan, integer(total_cost_cents, 1))
+    return result
+
+
+def debt_yield(annual_noi_cents, loan_cents):
+    noi = integer(annual_noi_cents, -10**14)
+    return _ratio(noi, integer(loan_cents, 1))
+
+
+def yield_on_cost(stabilized_noi_cents, total_cost_cents):
+    noi = integer(stabilized_noi_cents, -10**14)
+    return _ratio(noi, integer(total_cost_cents, 1))
+
+
+def interest_only_payment(principal_cents, annual_interest_bps):
+    principal = integer(principal_cents)
+    monthly = Decimal(integer(annual_interest_bps, 0, 10000)) / 120000
+    return {'monthly_interest_cents': rounded(Decimal(principal) * monthly), 'principal_repaid_cents': 0, 'balloon_at_maturity_cents': principal}
+
+
+def financing_fees(principal_cents, points_bps, flat_fee_cents=0):
+    principal = integer(principal_cents)
+    points = rounded(Decimal(principal) * integer(points_bps, 0, 10000) / 10000)
+    flat = integer(flat_fee_cents)
+    return {'points_cents': points, 'flat_fee_cents': flat, 'total_financing_fees_cents': points + flat}
+
+
+def remaining_balance(principal_cents, annual_interest_bps, term_months, elapsed_months):
+    principal = integer(principal_cents)
+    months = integer(term_months, 1, 600)
+    elapsed = integer(elapsed_months, 0, 600)
+    if elapsed > months:
+        raise ValueError('Elapsed term cannot exceed the amortization term')
+    rate = Decimal(integer(annual_interest_bps, 0, 10000)) / 120000
+    if not rate:
+        balance = Decimal(principal) * (months - elapsed) / months
+        return {'balance_cents': rounded(balance), 'principal_repaid_cents': principal - rounded(balance)}
+    payment = Decimal(principal) * rate / (1 - (1 + rate) ** -months)
+    growth = (1 + rate) ** elapsed
+    balance = Decimal(principal) * growth - payment * (growth - 1) / rate
+    settled = rounded(max(Decimal(0), balance))
+    return {'balance_cents': settled, 'principal_repaid_cents': principal - settled}
+
+
+def net_present_value(cashflow_cents, discount_bps):
+    if not isinstance(cashflow_cents, list) or not 1 <= len(cashflow_cents) <= 600:
+        raise ValueError('A bounded cash flow series is required')
+    rate = Decimal(integer(discount_bps, -9999, 1000000)) / 10000
+    if rate <= -1:
+        raise ValueError('Discount rate must exceed negative one')
+    total = sum(Decimal(integer(amount, -10**14)) / (1 + rate) ** period for period, amount in enumerate(cashflow_cents))
+    return rounded(total)
+
+
+def internal_rate_of_return(cashflow_cents, tolerance_bps=1):
+    if not isinstance(cashflow_cents, list) or not 2 <= len(cashflow_cents) <= 600:
+        raise ValueError('At least two cash flow periods are required')
+    flows = [integer(amount, -10**14) for amount in cashflow_cents]
+    if not any(amount > 0 for amount in flows) or not any(amount < 0 for amount in flows):
+        return {'irr_bps': None, 'reason': 'series_needs_both_a_negative_and_a_positive_cash_flow'}
+    present = lambda bps: sum(Decimal(amount) / (1 + Decimal(bps) / 10000) ** period for period, amount in enumerate(flows))
+    low, high = -9900, 1000000
+    if present(low) * present(high) > 0:
+        return {'irr_bps': None, 'reason': 'no_sign_change_within_supported_rate_range'}
+    step = integer(tolerance_bps, 1, 1000)
+    for _ in range(200):
+        if high - low <= step:
+            break
+        middle = (low + high) // 2
+        if present(low) * present(middle) <= 0:
+            high = middle
+        else:
+            low = middle
+    return {'irr_bps': (low + high) // 2, 'reason': None, 'bracket_bps': [low, high], 'method': 'deterministic_bisection_not_a_closed_form_solution'}
+
+
+def equity_multiple(contributions_cents, distributions_cents):
+    if not isinstance(contributions_cents, list) or not isinstance(distributions_cents, list):
+        raise ValueError('Contribution and distribution series are required')
+    invested = sum(integer(amount, 1) for amount in contributions_cents)
+    returned = sum(integer(amount) for amount in distributions_cents)
+    if not invested:
+        raise ValueError('Invested capital is required')
+    return {'invested_cents': invested, 'returned_cents': returned, 'equity_multiple': _ratio(returned, invested), 'profit_cents': returned - invested}
