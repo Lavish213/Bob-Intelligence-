@@ -10,6 +10,8 @@ import re
 FEATURES = {'living_area_sqft': 'living_area', 'bedrooms': 'bedrooms', 'bathrooms_half_units': 'bathrooms', 'lot_sqft': 'lot', 'garage_spaces': 'garage', 'pool': 'pool', 'condition': 'condition', 'quality': 'quality'}
 CATEGORIES = set(FEATURES.values()) | {'location', 'market_time', 'concessions', 'other'}
 PROPERTY_TYPES = {'single_family', 'condo', 'townhouse', 'manufactured', 'two_to_four_units'}
+VERIFICATION_CLASSES = ('independently_retrieved', 'operator_attested')
+RETRIEVAL_FIELDS = ('source_ref', 'sha256', 'retrieved_on', 'retriever')
 
 
 def integer(value, minimum=0, maximum=10**14):
@@ -55,6 +57,28 @@ def reconcile_indications(indications, subject_area_sqft):
     return {'point_cents': point, 'weights': displayed_weights}
 
 
+def classify_verification(comp, as_of):
+    receipt = comp.get('retrieval')
+    if receipt is None:
+        return 'operator_attested'
+    if not isinstance(receipt, dict) or set(receipt) != set(RETRIEVAL_FIELDS):
+        raise ValueError('Retrieval receipt must carry exactly a source, digest, date and retriever')
+    token(receipt['source_ref'])
+    token(receipt['retriever'])
+    if not isinstance(receipt['sha256'], str) or not re.fullmatch('[a-f0-9]{64}', receipt['sha256']):
+        raise ValueError('Retrieval receipt requires a sha256 document digest')
+    if day(receipt['retrieved_on']) > as_of:
+        raise ValueError('Retrieval receipt cannot postdate the valuation')
+    return 'independently_retrieved'
+
+
+def weakest_verification(classes):
+    for name in reversed(VERIFICATION_CLASSES):
+        if name in classes:
+            return name
+    return 'no_accepted_evidence'
+
+
 def validate_features(features):
     if not isinstance(features, dict) or set(features) != set(FEATURES):
         raise ValueError('All comparable feature fields are required')
@@ -90,7 +114,7 @@ def compare_sales(request, today=None):
     if not isinstance(comps, list) or len(comps) > 50:
         raise ValueError('Comparable budget exceeded')
     policy = request.get('policy', {})
-    if not isinstance(policy, dict) or set(policy) - {'max_age_days', 'max_distance_meters', 'max_gross_adjustment_bps', 'max_spread_bps', 'max_line_adjustment_bps', 'max_area_divergence_bps'}:
+    if not isinstance(policy, dict) or set(policy) - {'max_age_days', 'max_distance_meters', 'max_gross_adjustment_bps', 'max_spread_bps', 'max_line_adjustment_bps', 'max_area_divergence_bps', 'require_retrieval_receipts'}:
         raise ValueError('Unknown valuation policy')
     max_age = integer(policy.get('max_age_days', 180), 1, 730)
     max_distance = integer(policy.get('max_distance_meters', 800), 1, 50000)
@@ -98,6 +122,7 @@ def compare_sales(request, today=None):
     max_spread = integer(policy.get('max_spread_bps', 2000), 1, 10000)
     max_line = integer(policy.get('max_line_adjustment_bps', 1000), 1, 10000)
     max_area_divergence = integer(policy.get('max_area_divergence_bps', 2500), 1, 10000)
+    require_receipts = integer(policy.get('require_retrieval_receipts', 0), 0, 1)
     subject_area = integer(subject['features']['living_area_sqft'], 1, 100000)
     property_counts = Counter(c.get('property_id') for c in comps if isinstance(c, dict) and isinstance(c.get('property_id'), str))
     sale_counts = Counter(c.get('sale_id') for c in comps if isinstance(c, dict) and isinstance(c.get('sale_id'), str))
@@ -129,6 +154,9 @@ def compare_sales(request, today=None):
             if distance > max_distance:
                 reason = reason or 'sale_outside_distance_policy'
             validate_features(comp['features'])
+            verification = classify_verification(comp, as_of)
+            if require_receipts and verification != 'independently_retrieved':
+                reason = reason or 'retrieval_receipt_required_by_policy'
             comp_area = integer(comp['features']['living_area_sqft'], 1, 100000)
             if abs(comp_area - subject_area) * 10000 > max_area_divergence * subject_area:
                 reason = reason or 'living_area_outside_divergence_policy'
@@ -169,7 +197,7 @@ def compare_sales(request, today=None):
             gross_bps = int(Decimal(gross) * 10000 / price)
             if gross * 10000 > max_gross * price:
                 review_reasons.add('large_gross_adjustments')
-            accepted.append({'property_id': property_id, 'sale_id': sale_id, 'source_ref': source, 'comparison_review_ref': comparison_review, 'closed_on': sold.isoformat(), 'contract_on': contracted.isoformat(), 'available_on': available.isoformat(), 'sale_price_cents': price, 'adjustments': audited, 'net_adjustment_cents': net, 'gross_adjustment_cents': gross, 'gross_adjustment_bps': gross_bps, 'adjusted_value_cents': adjusted, 'sale_price_per_sqft_cents': cents(Decimal(price) / comp['features']['living_area_sqft']), 'age_days': age, 'distance_meters': distance, 'living_area_sqft': comp['features']['living_area_sqft']})
+            accepted.append({'property_id': property_id, 'sale_id': sale_id, 'source_ref': source, 'comparison_review_ref': comparison_review, 'closed_on': sold.isoformat(), 'contract_on': contracted.isoformat(), 'available_on': available.isoformat(), 'sale_price_cents': price, 'adjustments': audited, 'net_adjustment_cents': net, 'gross_adjustment_cents': gross, 'gross_adjustment_bps': gross_bps, 'adjusted_value_cents': adjusted, 'sale_price_per_sqft_cents': cents(Decimal(price) / comp['features']['living_area_sqft']), 'age_days': age, 'distance_meters': distance, 'living_area_sqft': comp['features']['living_area_sqft'], 'verification': verification})
         except (KeyError, TypeError, ValueError, ArithmeticError):
             rejected.append({'input_index': index, 'reason': 'malformed_or_unsupported_evidence'})
     point, low, high, spread_bps = None, None, None, None
@@ -187,7 +215,7 @@ def compare_sales(request, today=None):
         for comp, weight in zip(accepted, reconciliation['weights']):
             comp['weight'] = weight
     status = 'needs_data' if len(accepted) < 3 else 'needs_review' if review_reasons else 'ready_advisory'
-    return {'schema_version': '1.0', 'method': 'evidence_adjusted_sales_comparison', 'purpose': purpose, 'subject_id': subject_id, 'as_of': as_of.isoformat(), 'status': status, 'point_cents': point, 'supported_low_cents': low, 'supported_high_cents': high, 'range_meaning': 'observed_adjusted_sale_span_not_statistical_confidence_interval', 'spread_bps': spread_bps, 'comparable_count': len(accepted), 'accepted_comparables': sorted(accepted, key=lambda c: c['sale_id']), 'rejected_comparables': rejected, 'review_reasons': sorted(review_reasons), 'quote_authorized': False, 'offer_authorized': False, 'evidence_verification': 'trusted_input_attestations_not_independent_source_research'}
+    return {'schema_version': '1.0', 'method': 'evidence_adjusted_sales_comparison', 'purpose': purpose, 'subject_id': subject_id, 'as_of': as_of.isoformat(), 'status': status, 'point_cents': point, 'supported_low_cents': low, 'supported_high_cents': high, 'range_meaning': 'observed_adjusted_sale_span_not_statistical_confidence_interval', 'spread_bps': spread_bps, 'comparable_count': len(accepted), 'accepted_comparables': sorted(accepted, key=lambda c: c['sale_id']), 'rejected_comparables': rejected, 'review_reasons': sorted(review_reasons), 'quote_authorized': False, 'offer_authorized': False, 'evidence_verification': weakest_verification({c['verification'] for c in accepted}), 'verification_counts': {name: sum(1 for c in accepted if c['verification'] == name) for name in VERIFICATION_CLASSES}, 'evidence_verification_meaning': 'weakest_class_across_accepted_comparables_operator_attested_is_not_independent_research'}
 
 
 def valuation_for_brief(lead_id, lead, prop, packet):

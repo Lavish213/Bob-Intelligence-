@@ -12,7 +12,7 @@ from test_valuation import request
 
 
 BASELINE = Path(__file__).parent / 'valuation_output_baseline.json'
-TRACKED = ('status', 'point_cents', 'supported_low_cents', 'supported_high_cents', 'spread_bps', 'comparable_count', 'purpose', 'range_meaning', 'quote_authorized', 'offer_authorized')
+TRACKED = ('status', 'point_cents', 'supported_low_cents', 'supported_high_cents', 'spread_bps', 'comparable_count', 'purpose', 'range_meaning', 'quote_authorized', 'offer_authorized', 'evidence_verification', 'evidence_verification_meaning', 'verification_counts', 'method', 'schema_version')
 
 
 def _oversized_line(comp):

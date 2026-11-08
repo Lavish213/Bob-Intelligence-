@@ -368,3 +368,80 @@ def test_gate_precedence_is_stable_when_several_policies_are_violated():
     comp['features']['living_area_sqft'] = 2700
     comp['adjustments'].append({'category': 'quality', 'amount_cents': 20000000, 'evidence_ref': 'paired:quality', 'reviewed_by': 'operator:synthetic'})
     assert [r['reason'] for r in compare_sales(payload)['rejected_comparables']] == ['sale_outside_distance_policy']
+
+
+def _receipt(number, retrieved=None):
+    return {'source_ref': f'sjcounty:recorder-{number}', 'sha256': f'{number:064x}',
+            'retrieved_on': (retrieved or date.today()).isoformat(), 'retriever': 'bob:county-retriever'}
+
+
+class TestVerificationProvenance:
+    def test_a_comparable_without_a_receipt_is_operator_attested(self):
+        result = compare_sales(request())
+        assert result['evidence_verification'] == 'operator_attested'
+        assert result['verification_counts'] == {'independently_retrieved': 0, 'operator_attested': 3}
+
+    def test_a_comparable_with_a_receipt_is_independently_retrieved(self):
+        payload = request()
+        for index, comp in enumerate(payload['comparables']):
+            comp['retrieval'] = _receipt(index)
+        result = compare_sales(payload)
+        assert result['evidence_verification'] == 'independently_retrieved'
+        assert result['verification_counts'] == {'independently_retrieved': 3, 'operator_attested': 0}
+
+    def test_the_reported_class_is_the_weakest_across_accepted_comparables(self):
+        payload = request()
+        payload['comparables'][0]['retrieval'] = _receipt(1)
+        payload['comparables'][1]['retrieval'] = _receipt(2)
+        result = compare_sales(payload)
+        assert result['evidence_verification'] == 'operator_attested'
+        assert result['verification_counts'] == {'independently_retrieved': 2, 'operator_attested': 1}
+
+    def test_the_meaning_says_attestation_is_not_research(self):
+        assert 'operator_attested_is_not_independent_research' in compare_sales(request())['evidence_verification_meaning']
+
+    def test_policy_can_require_a_receipt_and_rejects_attested_comparables(self):
+        payload = request()
+        payload['comparables'][0]['retrieval'] = _receipt(1)
+        result = compare_sales({**payload, 'policy': {'require_retrieval_receipts': 1}})
+        assert {r['reason'] for r in result['rejected_comparables']} == {'retrieval_receipt_required_by_policy'}
+        assert result['status'] == 'needs_data'
+
+    def test_policy_accepts_a_fully_receipted_set(self):
+        payload = request()
+        for index, comp in enumerate(payload['comparables']):
+            comp['retrieval'] = _receipt(index)
+        result = compare_sales({**payload, 'policy': {'require_retrieval_receipts': 1}})
+        assert result['rejected_comparables'] == []
+        assert result['evidence_verification'] == 'independently_retrieved'
+
+    @pytest.mark.parametrize('receipt', [
+        {}, {'source_ref': 'x'}, 'nope', 7, [],
+        {'source_ref': 'x', 'sha256': 'short', 'retrieved_on': '2026-01-01', 'retriever': 'bob'},
+        {'source_ref': 'x', 'sha256': 'a' * 64, 'retrieved_on': 'not-a-date', 'retriever': 'bob'},
+        {'source_ref': 'x', 'sha256': 'a' * 64, 'retrieved_on': '2026-01-01', 'retriever': 'bob', 'extra': 1},
+    ])
+    def test_a_malformed_receipt_rejects_the_comparable_rather_than_being_ignored(self, receipt):
+        payload = request()
+        payload['comparables'][0]['retrieval'] = receipt
+        result = compare_sales(payload)
+        assert result['rejected_comparables']
+        assert result['point_cents'] is None
+
+    def test_a_receipt_cannot_postdate_the_valuation(self):
+        payload = request()
+        payload['comparables'][0]['retrieval'] = _receipt(1, date.today() + timedelta(days=1))
+        assert compare_sales(payload)['rejected_comparables']
+
+    def test_no_accepted_evidence_reports_its_own_class(self):
+        payload = request()
+        for comp in payload['comparables']:
+            comp['verified'] = False
+        assert compare_sales(payload)['evidence_verification'] == 'no_accepted_evidence'
+
+    def test_the_receipt_does_not_grant_any_authority(self):
+        payload = request()
+        for index, comp in enumerate(payload['comparables']):
+            comp['retrieval'] = _receipt(index)
+        result = compare_sales(payload)
+        assert result['quote_authorized'] is False and result['offer_authorized'] is False
