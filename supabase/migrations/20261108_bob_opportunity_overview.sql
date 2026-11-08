@@ -31,6 +31,7 @@ graded AS (
         coalesce(l.opportunity -> 'economics' ->> 'state', 'unknown') AS economics_state,
         coalesce(jsonb_array_length(l.opportunity -> 'blocked_reasons'), 0) AS blocked_count,
         coalesce(l.valuation ->> 'status', 'absent') AS valuation_status,
+        coalesce(l.valuation ->> 'evidence_verification', 'unknown') AS valuation_verification,
         coalesce(nullif(l.valuation ->> 'comparable_count', '')::integer, 0) AS comparable_count
     FROM latest l
     WHERE l.opportunity IS NOT NULL AND jsonb_typeof(l.opportunity) = 'object'
@@ -64,6 +65,7 @@ SELECT jsonb_build_object(
     'by_grade', coalesce((SELECT jsonb_object_agg(grade, total) FROM (SELECT grade, count(*) AS total FROM graded GROUP BY grade) r), '{}'::jsonb),
     'by_evidence_confidence', coalesce((SELECT jsonb_object_agg(evidence_confidence, total) FROM (SELECT evidence_confidence, count(*) AS total FROM graded GROUP BY evidence_confidence) r), '{}'::jsonb),
     'by_lockout_class', coalesce((SELECT jsonb_object_agg(lockout_class, total) FROM (SELECT lockout_class, count(*) AS total FROM graded WHERE lockout_class IS NOT NULL GROUP BY lockout_class) r), '{}'::jsonb),
+    'by_valuation_verification', coalesce((SELECT jsonb_object_agg(valuation_verification, total) FROM (SELECT valuation_verification, count(*) AS total FROM graded GROUP BY valuation_verification) r), '{}'::jsonb),
     'deals', coalesce((
         SELECT jsonb_agg(jsonb_build_object(
             'lead_id', lead_id,
@@ -80,6 +82,7 @@ SELECT jsonb_build_object(
             'headroom_cents', headroom_cents,
             'headroom_bps', headroom_bps,
             'valuation_status', valuation_status,
+            'valuation_verification', valuation_verification,
             'comparable_count', comparable_count,
             'blocked_count', blocked_count,
             'lockout_class', lockout_class,
