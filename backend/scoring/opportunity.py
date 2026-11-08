@@ -15,6 +15,7 @@ EVIDENCE_GRADE_CEILING = {'verified': 'A', 'supported': 'B', 'thin': 'C'}
 GRADE_ORDER = ('A', 'B', 'C', 'D', 'F')
 MIN_HOT_BUY_GRADE = 'B'
 COST_MODEL_FIELDS = ('buying_fixed_cents', 'holding_cents', 'financing_fixed_cents', 'target_profit_cents', 'buying_bps', 'selling_bps')
+REHAB_FIELDS = ('expected_with_contingency_cents', 'estimate_is_complete', 'inspection_required', 'low_cents', 'high_cents')
 
 
 def _money(value):
@@ -95,8 +96,23 @@ def _grade_from_headroom(headroom_bps):
     return 'F'
 
 
-def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_reasons=None, multiplier_bps=7000, cost_model=None):
+def _rehab_repairs(rehab):
+    if not isinstance(rehab, dict) or any(key not in rehab for key in REHAB_FIELDS):
+        return None, None
+    amount = rehab['expected_with_contingency_cents']
+    if isinstance(amount, bool) or type(amount) is not int or not 0 <= amount <= 10**14:
+        return None, None
+    pending = rehab['inspection_required']
+    outstanding = len(pending) if isinstance(pending, list) else 0
+    return amount, {'complete': rehab['estimate_is_complete'] is True, 'outstanding_inspections': outstanding,
+                    'low_cents': rehab.get('low_cents'), 'high_cents': rehab.get('high_cents')}
+
+
+def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_reasons=None, multiplier_bps=7000, cost_model=None, rehab=None):
     blocked = sorted(reason for reason in blocked_reasons if isinstance(reason, str)) if isinstance(blocked_reasons, list) else []
+    rehab_amount, rehab_state = _rehab_repairs(rehab)
+    if rehab_amount is not None and repairs_cents is None:
+        repairs_cents = rehab_amount
     level, evidence_reasons = evidence_confidence(valuation)
     money = economics(valuation, repairs_cents, asking_cents, multiplier_bps, cost_model)
     signals, contradictions, missing = [], list(evidence_reasons), list(money['missing_inputs'])
@@ -118,6 +134,12 @@ def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_
         grade = 'F'
     if level == 'verified' and money['state'] == 'known':
         signals.append('valuation_supported_by_qualified_comparables')
+    rehab_incomplete = rehab_state is not None and not rehab_state['complete']
+    if rehab_incomplete:
+        contradictions.append('rehab_estimate_incomplete_pending_inspection')
+        missing.append(f"inspection_for_{rehab_state['outstanding_inspections']}_scope_area" + ('s' if rehab_state['outstanding_inspections'] != 1 else ''))
+    elif rehab_state is not None:
+        signals.append('rehab_scope_fully_priced')
     if blocked:
         readiness, lockout = 'ARCHIVED', 'blocked_until_suppression_or_contact_restriction_clears'
     elif level == 'unusable':
@@ -126,6 +148,8 @@ def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_
         readiness, lockout = 'WATCH_LIST', 'research_required'
     elif grade == 'F':
         readiness, lockout = 'WATCH_LIST', 'price_dependent'
+    elif rehab_incomplete:
+        readiness, lockout = 'WATCH_LIST', 'research_required'
     elif level == 'verified' and GRADE_ORDER.index(grade) <= GRADE_ORDER.index(MIN_HOT_BUY_GRADE):
         readiness, lockout = 'HOT_BUY', None
     else:
@@ -140,4 +164,4 @@ def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_
         next_action = 'monitor_price_movement'
     else:
         next_action = 'prepare_offer_for_human_approval'
-    return {'schema_version': SCHEMA_VERSION, 'policy_version': POLICY_VERSION, 'grade': grade, 'readiness': readiness, 'evidence_confidence': level, 'evidence_reasons': sorted(evidence_reasons), 'economics': money, 'opportunity_signals': sorted(set(signals)), 'contradictory_evidence': sorted(set(contradictions)), 'missing_facts': missing, 'lockout_class': lockout, 'blocked_reasons': blocked, 'next_action': next_action, 'grading_basis': 'internal_screening_policy_not_an_appraisal_or_investment_guarantee', 'quote_authorized': False, 'offer_authorized': False}
+    return {'schema_version': SCHEMA_VERSION, 'policy_version': POLICY_VERSION, 'rehab_basis': rehab_state, 'grade': grade, 'readiness': readiness, 'evidence_confidence': level, 'evidence_reasons': sorted(evidence_reasons), 'economics': money, 'opportunity_signals': sorted(set(signals)), 'contradictory_evidence': sorted(set(contradictions)), 'missing_facts': missing, 'lockout_class': lockout, 'blocked_reasons': blocked, 'next_action': next_action, 'grading_basis': 'internal_screening_policy_not_an_appraisal_or_investment_guarantee', 'quote_authorized': False, 'offer_authorized': False}
