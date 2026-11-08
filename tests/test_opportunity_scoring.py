@@ -162,3 +162,61 @@ class TestKnownFactsSurviveIncompleteEconomics:
             assert money['purchase_limit_cents'] is None
             assert money['headroom_cents'] is None
             assert money['headroom_bps'] is None
+
+
+class TestGradingCannotCrashABrief:
+    @pytest.mark.parametrize('reasons', [[None, {}, 1, 'large_gross_adjustments'], [{}, []], 'not-a-list', {'a': 1}, None, [None]])
+    def test_malformed_review_reasons_never_raise(self, reasons):
+        result = grade_opportunity({'status': 'needs_review', 'point_cents': 100, 'comparable_count': 5, 'review_reasons': reasons, 'spread_bps': 1}, 1, 1)
+        assert result['readiness'] in ('HOT_BUY', 'WATCH_LIST', 'ARCHIVED')
+        assert all(isinstance(reason, str) for reason in result['evidence_reasons'])
+
+    @pytest.mark.parametrize('valuation', [[], 'x', 7, True, {'status': 'ready_advisory'}, {'status': 'ready_advisory', 'comparable_count': True}])
+    def test_hostile_valuations_never_raise(self, valuation):
+        assert grade_opportunity(valuation, 1, 1)['quote_authorized'] is False
+
+    @pytest.mark.parametrize('blocked', ['a-string', 7, {'a': 1}, [None, 1, 'suppression_not_cleared'], None])
+    def test_hostile_blocked_reasons_never_raise(self, blocked):
+        result = grade_opportunity({'status': 'ready_advisory', 'point_cents': 100, 'comparable_count': 5, 'review_reasons': [], 'spread_bps': 1}, 1, 1, blocked_reasons=blocked)
+        assert all(isinstance(reason, str) for reason in result['blocked_reasons'])
+
+    def test_extreme_money_values_do_not_raise(self):
+        for arv, repairs, asking in ((10**14, 10**14, 1), (1, 0, 10**14), (1, 0, 1)):
+            result = grade_opportunity({'status': 'ready_advisory', 'point_cents': arv, 'comparable_count': 5, 'review_reasons': [], 'spread_bps': 1}, repairs, asking)
+            assert result['grade'] in GRADE_ORDER
+
+    def test_a_grading_failure_does_not_destroy_the_brief(self, monkeypatch):
+        from backend.call_planner import brief_generator
+        monkeypatch.setattr(brief_generator, 'grade_opportunity', lambda *a, **k: 1 / 0)
+        brief = brief_generator.generate_call_brief('lead-1', {'id': 'lead-1', 'property_id': 'p1'}, {'id': 'p1', 'state': 'CA'}, {}, {}).to_dict()
+        assert brief['evidence']['opportunity'] is None
+        assert brief['lead_id'] == 'lead-1'
+        assert brief['evidence']['valuation'] is not None
+
+
+class TestRandomizedHostileInput:
+    POOL = (None, True, False, 0, -1, 1.5, 10**15, 'x', [], {}, [None], {'a': 1},
+            'ready_advisory', 'needs_data', 'invalid_input', 3, 50,
+            ['suppression_not_cleared'], [1, 'a', None], 'suppressed')
+
+    def test_grading_never_raises_and_never_authorizes(self):
+        import random
+        generator = random.Random(20261108)
+        shapes = set()
+        for _ in range(3000):
+            value = {key: generator.choice(self.POOL) for key in ('status', 'point_cents', 'comparable_count', 'review_reasons', 'spread_bps')}
+            if generator.random() < 0.3:
+                value = generator.choice(self.POOL)
+            result = grade_opportunity(value, generator.choice(self.POOL), generator.choice(self.POOL), generator.choice(self.POOL))
+            assert result['quote_authorized'] is False and result['offer_authorized'] is False
+            assert result['readiness'] in ('HOT_BUY', 'WATCH_LIST', 'ARCHIVED')
+            assert result['grade'] is None or result['grade'] in GRADE_ORDER
+            assert all(isinstance(reason, str) for reason in result['blocked_reasons'])
+            assert all(isinstance(reason, str) for reason in result['evidence_reasons'])
+            shapes.add(frozenset(result['economics']))
+        assert len(shapes) == 1, 'economics must expose one stable key set whatever the input'
+
+    def test_a_string_of_reasons_is_not_split_into_characters(self):
+        value = {'status': 'ready_advisory', 'point_cents': 100, 'comparable_count': 5, 'review_reasons': [], 'spread_bps': 1}
+        assert grade_opportunity(value, 1, 1, blocked_reasons='suppressed')['blocked_reasons'] == []
+        assert grade_opportunity(value, 1, 1, blocked_reasons=['suppression_not_cleared'])['blocked_reasons'] == ['suppression_not_cleared']

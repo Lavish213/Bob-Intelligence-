@@ -37,7 +37,8 @@ def evidence_confidence(valuation):
     count = count if isinstance(count, int) and not isinstance(count, bool) else 0
     if status == 'needs_data' or count < 3:
         return 'thin', ['fewer_than_three_qualified_comparables']
-    review = sorted(valuation.get('review_reasons') or [])
+    raw_review = valuation.get('review_reasons')
+    review = sorted(item for item in raw_review if isinstance(item, str)) if isinstance(raw_review, list) else []
     spread = valuation.get('spread_bps')
     if status == 'needs_review' or review:
         return 'supported', review or ['valuation_needs_review']
@@ -71,7 +72,7 @@ def _grade_from_headroom(headroom_bps):
 
 
 def grade_opportunity(valuation, repairs_cents=None, asking_cents=None, blocked_reasons=None, multiplier_bps=7000):
-    blocked = sorted(str(reason) for reason in (blocked_reasons or []) if isinstance(reason, str))
+    blocked = sorted(reason for reason in blocked_reasons if isinstance(reason, str)) if isinstance(blocked_reasons, list) else []
     level, evidence_reasons = evidence_confidence(valuation)
     money = economics(valuation, repairs_cents, asking_cents, multiplier_bps)
     signals, contradictions, missing = [], list(evidence_reasons), list(money['missing_inputs'])
