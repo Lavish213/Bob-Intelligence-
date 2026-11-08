@@ -1,4 +1,6 @@
 from copy import deepcopy
+from decimal import Decimal
+from itertools import permutations
 import hashlib
 import json
 from pathlib import Path
@@ -8,7 +10,7 @@ import sys
 
 import pytest
 
-from backend.valuation.local_benchmark import evaluate, summarize
+from backend.valuation.local_benchmark import evaluate, ratio_study, summarize
 
 
 def cohort(purpose='as_is'):
@@ -131,3 +133,79 @@ def test_cli_requires_exact_frozen_bytes_and_rejects_invalid_payload(tmp_path):
     bad = subprocess.run(command + ['0' * 64], cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
     assert bad.returncode == 2
     assert json.loads(bad.stdout)['status'] == 'invalid_input'
+
+
+def _pairs(*values):
+    return [{'estimate_cents': estimate, 'truth_cents': truth} for estimate, truth in values]
+
+
+def test_ratio_study_matches_hand_computed_iaao_definitions():
+    study = ratio_study(_pairs((10000000, 10000000), (10500000, 10000000), (19000000, 20000000), (28500000, 30000000), (41000000, 40000000)))
+    assert study['ratio_cases'] == 5
+    assert study['median_ratio'] == '1'
+    assert study['mean_ratio'] == '0.995'
+    assert study['coefficient_of_dispersion'] == '3.5'
+    assert study['price_related_differential'].startswith('1.00412844')
+    assert study['threshold_flags'] == []
+
+
+def test_perfect_predictions_give_zero_dispersion_and_unit_differential():
+    study = ratio_study(_pairs((10000000, 10000000), (20000000, 20000000), (40000000, 40000000)))
+    assert (study['median_ratio'], study['coefficient_of_dispersion'], study['price_related_differential']) == ('1', '0', '1')
+    assert study['price_related_bias'] == '0.000000'
+    assert study['threshold_flags'] == []
+
+
+def test_regressive_valuations_produce_negative_price_related_bias():
+    study = ratio_study(_pairs((10500000, 10000000), (20000000, 20000000), (38000000, 40000000), (72000000, 80000000)))
+    assert Decimal(study['price_related_bias']) < 0
+    assert 'prb_outside_iaao_tolerance' in study['threshold_flags']
+
+
+def test_progressive_valuations_produce_positive_price_related_bias():
+    study = ratio_study(_pairs((9500000, 10000000), (20000000, 20000000), (42000000, 40000000), (88000000, 80000000)))
+    assert Decimal(study['price_related_bias']) > 0
+
+
+def test_dispersion_above_the_residential_ceiling_is_flagged():
+    study = ratio_study(_pairs((5000000, 10000000), (10000000, 10000000), (15000000, 10000000)))
+    assert Decimal(study['coefficient_of_dispersion']) > 15
+    assert 'cod_above_iaao_residential_ceiling' in study['threshold_flags']
+
+
+def test_median_ratio_outside_the_band_is_flagged():
+    assert 'median_ratio_outside_iaao_band' in ratio_study(_pairs((6000000, 10000000), (6000000, 10000000), (6000000, 10000000)))['threshold_flags']
+
+
+def test_ratio_study_is_order_independent_and_exact():
+    values = ((10000000, 10000000), (10500000, 10000000), (19000000, 20000000), (28500000, 30000000), (41000000, 40000000))
+    outcomes = {json.dumps(ratio_study(_pairs(*order)), sort_keys=True) for order in permutations(values)}
+    assert len(outcomes) == 1
+    assert '0.99999' not in outcomes.pop()
+
+
+def test_ratio_study_refuses_degenerate_inputs():
+    assert ratio_study([]) is None
+    assert ratio_study(_pairs((10000000, 0))) is None
+    assert ratio_study(_pairs((10000000, -5))) is None
+
+
+def test_price_related_bias_needs_at_least_two_cases_and_price_variation():
+    single = _pairs((10500000, 10000000))
+    assert ratio_study(single)['price_related_bias'] is None
+    identical = _pairs((10500000, 10000000), (10500000, 10000000))
+    assert ratio_study(identical)['price_related_bias'] is None
+
+
+def test_summarize_reports_a_ratio_study_and_labels_it_as_not_a_certification():
+    rows = [{'estimate_cents': 10500000, 'truth_cents': 10000000, 'status': 'ready_advisory', 'low_cents': 10000000, 'high_cents': 11000000},
+            {'estimate_cents': 19000000, 'truth_cents': 20000000, 'status': 'ready_advisory', 'low_cents': 18000000, 'high_cents': 21000000},
+            {'estimate_cents': None, 'truth_cents': 30000000, 'status': 'needs_data', 'low_cents': None, 'high_cents': None}]
+    result = summarize(rows)
+    assert result['abstained_cases'] == 1
+    assert result['ratio_study']['ratio_cases'] == 2
+    assert 'not_an_appraisal_certification' in result['ratio_study']['standard']
+
+
+def test_summarize_omits_a_ratio_study_when_everything_abstained():
+    assert summarize([{'estimate_cents': None, 'truth_cents': 10000000, 'status': 'needs_data', 'low_cents': None, 'high_cents': None}]).get('ratio_study') is None

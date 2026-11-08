@@ -1,7 +1,8 @@
 from collections import Counter, defaultdict
 from copy import deepcopy
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, localcontext
+from fractions import Fraction
 import hashlib
 import json
 import re
@@ -22,6 +23,72 @@ def reference(value):
         raise ValueError('Invalid document checksum')
 
 
+IAAO_RESIDENTIAL_COD_CEILING = Fraction(15)
+IAAO_PRD_FLOOR = Fraction(98, 100)
+IAAO_PRD_CEILING = Fraction(103, 100)
+IAAO_MEDIAN_RATIO_FLOOR = Fraction(95, 100)
+IAAO_MEDIAN_RATIO_CEILING = Fraction(105, 100)
+IAAO_PRB_TOLERANCE = Decimal('0.05')
+
+
+def _median(values):
+    count = len(values)
+    middle = count // 2
+    return values[middle] if count % 2 else (values[middle - 1] + values[middle]) / 2
+
+
+def price_related_bias(predicted, median_ratio):
+    if len(predicted) < 2 or median_ratio <= 0:
+        return None
+    with localcontext() as context:
+        context.prec = 50
+        ln2 = Decimal(2).ln()
+        median_decimal = Decimal(median_ratio.numerator) / Decimal(median_ratio.denominator)
+        independent, dependent = [], []
+        for row in predicted:
+            estimate, truth = Decimal(row['estimate_cents']), Decimal(row['truth_cents'])
+            proxy = (estimate / median_decimal + truth) / 2
+            if proxy <= 0:
+                return None
+            independent.append(proxy.ln() / ln2)
+            dependent.append((estimate / truth - median_decimal) / median_decimal)
+        count = Decimal(len(independent))
+        mean_independent = sum(independent) / count
+        mean_dependent = sum(dependent) / count
+        variance = sum((value - mean_independent) ** 2 for value in independent)
+        if variance == 0:
+            return None
+        covariance = sum((x - mean_independent) * (y - mean_dependent) for x, y in zip(independent, dependent))
+        return (covariance / variance).quantize(Decimal('0.000001'))
+
+
+def ratio_study(predicted):
+    if not predicted or any(row['truth_cents'] <= 0 for row in predicted):
+        return None
+    ratios = sorted(Fraction(row['estimate_cents'], row['truth_cents']) for row in predicted)
+    median_ratio = _median(ratios)
+    if median_ratio <= 0:
+        return None
+    total_estimate = sum(row['estimate_cents'] for row in predicted)
+    total_truth = sum(row['truth_cents'] for row in predicted)
+    mean_ratio = sum(ratios) / len(ratios)
+    weighted_mean_ratio = Fraction(total_estimate, total_truth)
+    dispersion = sum(abs(ratio - median_ratio) for ratio in ratios) / len(ratios) * 100 / median_ratio
+    differential = mean_ratio / weighted_mean_ratio if weighted_mean_ratio > 0 else None
+    bias = price_related_bias(predicted, median_ratio)
+    exact = lambda value: str(Decimal(value.numerator) / Decimal(value.denominator)) if value is not None else None
+    flags = []
+    if dispersion > IAAO_RESIDENTIAL_COD_CEILING:
+        flags.append('cod_above_iaao_residential_ceiling')
+    if differential is not None and not IAAO_PRD_FLOOR <= differential <= IAAO_PRD_CEILING:
+        flags.append('prd_outside_iaao_band')
+    if not IAAO_MEDIAN_RATIO_FLOOR <= median_ratio <= IAAO_MEDIAN_RATIO_CEILING:
+        flags.append('median_ratio_outside_iaao_band')
+    if bias is not None and abs(bias) > IAAO_PRB_TOLERANCE:
+        flags.append('prb_outside_iaao_tolerance')
+    return {'ratio_cases': len(predicted), 'median_ratio': exact(median_ratio), 'mean_ratio': exact(mean_ratio), 'weighted_mean_ratio': exact(weighted_mean_ratio), 'coefficient_of_dispersion': exact(dispersion), 'price_related_differential': exact(differential), 'price_related_bias': str(bias) if bias is not None else None, 'standard': 'iaao_ratio_study_residential_bands_not_an_appraisal_certification', 'threshold_flags': flags}
+
+
 def summarize(rows):
     predicted = [row for row in rows if row['estimate_cents'] is not None]
     result = {'eligible_cases': len(rows), 'predicted_cases': len(predicted), 'abstained_cases': len(rows) - len(predicted), 'statuses': dict(sorted(Counter(row['status'] for row in rows).items()))}
@@ -31,6 +98,7 @@ def summarize(rows):
     percentages = sorted(Decimal(abs(error)) * 100 / row['truth_cents'] for error, row in zip(errors, predicted))
     number = lambda value: str(Decimal(value).quantize(Decimal('0.0001')))
     result.update(mean_absolute_error_dollars=number(Decimal(sum(abs(error) for error in errors)) / len(errors) / 100), mean_absolute_percentage_error=number(sum(percentages) / len(percentages)), median_absolute_percentage_error=number(statistics.median(percentages)), p90_absolute_percentage_error=number(percentages[(9 * len(percentages) + 9) // 10 - 1]), mean_signed_percentage_error=number(sum(Decimal(error) * 100 / row['truth_cents'] for error, row in zip(errors, predicted)) / len(errors)), within_10_percent=sum(value <= 10 for value in percentages), observed_comp_span_contains_sale=sum(row['low_cents'] <= row['truth_cents'] <= row['high_cents'] for row in predicted))
+    result['ratio_study'] = ratio_study(predicted)
     return result
 
 

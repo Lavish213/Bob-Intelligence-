@@ -1,0 +1,248 @@
+{
+  "_ratio_study_oracle": {
+    "coefficient_of_dispersion": "3.5",
+    "mean_ratio": "0.995",
+    "median_ratio": "1",
+    "price_related_bias": "-0.015644",
+    "price_related_differential": "1.004128440366972477064220183",
+    "ratio_cases": 5,
+    "standard": "iaao_ratio_study_residential_bands_not_an_appraisal_certification",
+    "threshold_flags": [],
+    "weighted_mean_ratio": "0.9909090909090909090909090909"
+  },
+  "after_repair_condition_bridge": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "after_repair_requires_renovated_comp_evidence"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  },
+  "age_outside_policy": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "sale_outside_age_policy"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  },
+  "area_boundary_accepted": {
+    "adjusted_values": [
+      46000000,
+      46000000,
+      46000000
+    ],
+    "comparable_count": 3,
+    "offer_authorized": false,
+    "point_cents": 46000000,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [],
+    "review_reasons": [],
+    "spread_bps": 0,
+    "status": "ready_advisory",
+    "supported_high_cents": 46000000,
+    "supported_low_cents": 46000000
+  },
+  "area_divergence": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "living_area_outside_divergence_policy"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  },
+  "as_is_condition_bridge": {
+    "adjusted_values": [
+      46000000,
+      46000000,
+      48000000
+    ],
+    "comparable_count": 3,
+    "offer_authorized": false,
+    "point_cents": 46653927,
+    "purpose": "as_is",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [],
+    "review_reasons": [],
+    "spread_bps": 428,
+    "status": "ready_advisory",
+    "supported_high_cents": 48000000,
+    "supported_low_cents": 46000000
+  },
+  "clean_after_repair": {
+    "adjusted_values": [
+      46000000,
+      46000000,
+      46000000
+    ],
+    "comparable_count": 3,
+    "offer_authorized": false,
+    "point_cents": 46000000,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [],
+    "review_reasons": [],
+    "spread_bps": 0,
+    "status": "ready_advisory",
+    "supported_high_cents": 46000000,
+    "supported_low_cents": 46000000
+  },
+  "clean_as_is": {
+    "adjusted_values": [
+      46000000,
+      46000000,
+      46000000
+    ],
+    "comparable_count": 3,
+    "offer_authorized": false,
+    "point_cents": 46000000,
+    "purpose": "as_is",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [],
+    "review_reasons": [],
+    "spread_bps": 0,
+    "status": "ready_advisory",
+    "supported_high_cents": 46000000,
+    "supported_low_cents": 46000000
+  },
+  "distance_boundary_accepted": {
+    "adjusted_values": [
+      46000000,
+      46000000,
+      46000000
+    ],
+    "comparable_count": 3,
+    "offer_authorized": false,
+    "point_cents": 46000000,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [],
+    "review_reasons": [],
+    "spread_bps": 0,
+    "status": "ready_advisory",
+    "supported_high_cents": 46000000,
+    "supported_low_cents": 46000000
+  },
+  "distance_outside_policy": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "sale_outside_distance_policy"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  },
+  "non_arms_length": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "unverified_or_nonclosed_or_nonmarket_sale"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  },
+  "oversized_single_line": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "single_adjustment_exceeds_line_policy"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  },
+  "unverified_sale": {
+    "adjusted_values": [
+      46000000,
+      46000000
+    ],
+    "comparable_count": 2,
+    "offer_authorized": false,
+    "point_cents": null,
+    "purpose": "after_repair",
+    "quote_authorized": false,
+    "range_meaning": "observed_adjusted_sale_span_not_statistical_confidence_interval",
+    "rejection_reasons": [
+      "unverified_or_nonclosed_or_nonmarket_sale"
+    ],
+    "review_reasons": [],
+    "spread_bps": null,
+    "status": "needs_data",
+    "supported_high_cents": null,
+    "supported_low_cents": null
+  }
+}
